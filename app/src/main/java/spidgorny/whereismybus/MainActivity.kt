@@ -1,5 +1,6 @@
 package spidgorny.whereismybus
 
+import android.Manifest
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
@@ -13,16 +14,26 @@ import okhttp3.Response
 import java.io.IOException
 import android.os.StrictMode
 import android.util.Log
+import im.delight.android.location.SimpleLocation
 import io.nlopez.smartlocation.OnLocationUpdatedListener
 import io.nlopez.smartlocation.SmartLocation
 import io.nlopez.smartlocation.location.config.LocationParams
 import kotlinx.android.synthetic.main.content_main.*
+import android.Manifest.permission
+import android.Manifest.permission.ACCESS_COARSE_LOCATION
+import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.content.pm.PackageManager
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 
 
 class MainActivity : AppCompatActivity() {
 
-
     private val klass = "MainActivity"
+
+    private var location: SimpleLocation? = null
+
+    private val MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +42,20 @@ class MainActivity : AppCompatActivity() {
 
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED) {
+            Log.d(this.klass, "Permissions OK")
+            this.initLocation()
+        } else {
+            Log.d(this.klass, "Permissions Request")
+            ActivityCompat.requestPermissions(this, arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION),
+                    MY_PERMISSIONS_REQUEST_READ_CONTACTS)
+        }
 
         val lsEnabled = SmartLocation.with(this.applicationContext).location().state().locationServicesEnabled()
         if (!lsEnabled) {
@@ -50,25 +75,65 @@ class MainActivity : AppCompatActivity() {
                     .setAction("Action", null).show()
         }
 
-        SmartLocation.with(this).location().config(LocationParams.NAVIGATION)
-
         fab.setOnClickListener { view ->
             Log.d(this.klass, "FAB click")
-            SmartLocation
-                    .with(view.context)
-                    .location()
-                    .oneFix()
-                    .start(OnLocationUpdatedListener() {
-                        val location = it.latitude.toString() + "," + it.longitude.toString() + " speed: " + it.speed.toString()
-                        Log.d(this.klass, location)
-                        Snackbar.make(view, location.toString(), Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show()
+            val latitude = location!!.latitude
+            val longitude = location!!.longitude
+            val speed = location!!.speed
+            val location = latitude.toString() + "," + longitude.toString() + " speed: " + speed.toString()
+            Log.d(this.klass, location)
+            Snackbar.make(view, location, Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
 
-                        val response = this.pushLocation()
-                        Snackbar.make(view, response.toString(), Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show()
-                    })
+            val response = this.pushLocation()
+            Snackbar.make(view, response.toString(), Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
         }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int,
+                                            permissions: Array<String>, grantResults: IntArray) {
+        when (requestCode) {
+            MY_PERMISSIONS_REQUEST_READ_CONTACTS -> {
+                // If request is cancelled, the result arrays are empty.
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                    this.initLocation()
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return
+            }
+
+        // Add other 'when' lines to check for other
+        // permissions this app might request.
+            else -> {
+                // Ignore all other requests.
+            }
+        }
+    }
+
+    private fun initLocation() {
+        Log.d(this.klass, "location is set")
+        this.location = SimpleLocation(this, true, false, 5 * 1000, true)
+        // if we can't access the location yet
+        if (!this.location!!.hasLocationEnabled()) {
+            // ask the user to enable location access
+            SimpleLocation.openSettings(this)
+        }
+
+        location!!.setListener({
+            fun onPositionChanged() {
+                val latitude = location!!.latitude
+                val longitude = location!!.longitude
+                val speed = location!!.speed
+                val location = latitude.toString() + "," + longitude.toString() + " speed: " + speed.toString()
+                Log.d(this.klass + " onPositionChanged", location)
+            }
+        })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -109,4 +174,25 @@ class MainActivity : AppCompatActivity() {
         SmartLocation.with(context).location().stop()
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        // make the device update its location
+        if (this.location != null) {
+            this.location!!.beginUpdates()
+        }
+
+        // ...
+    }
+
+    override fun onPause() {
+        // stop location updates (saves battery)
+        if (this.location != null) {
+            this.location!!.endUpdates()
+        }
+
+        // ...
+
+        super.onPause()
+    }
 }
