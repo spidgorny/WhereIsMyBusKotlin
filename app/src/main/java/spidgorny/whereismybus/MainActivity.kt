@@ -12,10 +12,17 @@ import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
 import android.os.StrictMode
-
+import android.util.Log
+import io.nlopez.smartlocation.OnLocationUpdatedListener
+import io.nlopez.smartlocation.SmartLocation
+import io.nlopez.smartlocation.location.config.LocationParams
+import kotlinx.android.synthetic.main.content_main.*
 
 
 class MainActivity : AppCompatActivity() {
+
+
+    private val klass = "MainActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,11 +32,42 @@ class MainActivity : AppCompatActivity() {
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
 
-        fab.setOnClickListener { view ->
-            val response = this.pushLocation()
-            Snackbar.make(view, response.toString(), Snackbar.LENGTH_LONG)
+        val lsEnabled = SmartLocation.with(this.applicationContext).location().state().locationServicesEnabled()
+        if (!lsEnabled) {
+            Snackbar.make(top_view, "LocationService not enabled", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
+        } else {
+            Snackbar.make(top_view, "LocationService OK", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
+        }
 
+        val gpsEnabled = SmartLocation.with(this.applicationContext).location().state().isGpsAvailable
+        if (!gpsEnabled) {
+            Snackbar.make(top_view, "GPS not enabled", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
+        } else {
+            Snackbar.make(top_view, "GPS OK", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
+        }
+
+        SmartLocation.with(this).location().config(LocationParams.NAVIGATION)
+
+        fab.setOnClickListener { view ->
+            Log.d(this.klass, "FAB click")
+            SmartLocation
+                    .with(view.context)
+                    .location()
+                    .oneFix()
+                    .start(OnLocationUpdatedListener() {
+                        val location = it.latitude.toString() + "," + it.longitude.toString() + " speed: " + it.speed.toString()
+                        Log.d(this.klass, location)
+                        Snackbar.make(view, location.toString(), Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show()
+
+                        val response = this.pushLocation()
+                        Snackbar.make(view, response.toString(), Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show()
+                    })
         }
     }
 
@@ -61,8 +99,14 @@ class MainActivity : AppCompatActivity() {
             val response = client.newCall(request).execute()
             return response.body()?.string()
         } catch (e: IOException) {
-            return e.toString();
+            return e.toString()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        val context = this.applicationContext
+        SmartLocation.with(context).location().stop()
     }
 
 }
