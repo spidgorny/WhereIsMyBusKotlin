@@ -57,37 +57,28 @@ class MainActivity : AppCompatActivity() {
                     MY_PERMISSIONS_REQUEST_READ_CONTACTS)
         }
 
-        val lsEnabled = SmartLocation.with(this.applicationContext).location().state().locationServicesEnabled()
-        if (!lsEnabled) {
-            Snackbar.make(top_view, "LocationService not enabled", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        } else {
-            Snackbar.make(top_view, "LocationService OK", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
-
-        val gpsEnabled = SmartLocation.with(this.applicationContext).location().state().isGpsAvailable
-        if (!gpsEnabled) {
-            Snackbar.make(top_view, "GPS not enabled", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        } else {
-            Snackbar.make(top_view, "GPS OK", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
-
         fab.setOnClickListener { view ->
             Log.d(this.klass, "FAB click")
-            val latitude = location!!.latitude
-            val longitude = location!!.longitude
-            val speed = location!!.speed
-            val location = latitude.toString() + "," + longitude.toString() + " speed: " + speed.toString()
-            Log.d(this.klass, location)
-            Snackbar.make(view, location, Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
+//            val latitude = location!!.latitude
+//            val longitude = location!!.longitude
+//            val speed = location!!.speed
+            SmartLocation.with(this.applicationContext).location()
+                    .oneFix()
+                    .start(OnLocationUpdatedListener() {
+                        val latitude = it.latitude
+                        val longitude = it.longitude
+                        val speed = it.speed
 
-            val response = this.pushLocation()
-            Snackbar.make(view, response.toString(), Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
+                        val location = latitude.toString() + "," + longitude.toString() + " speed: " + speed.toString()
+                        Log.d(this.klass, location)
+                        Snackbar.make(view, location, Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show()
+
+                        val response = this.pushLocation(latitude, longitude, speed)
+                        Snackbar.make(view, response.toString(), Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show()
+
+                    })
         }
     }
 
@@ -117,6 +108,29 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initLocation() {
+        val lsEnabled = SmartLocation.with(this.applicationContext).location().state().locationServicesEnabled()
+        if (!lsEnabled) {
+            Snackbar.make(top_view, "LocationService not enabled", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
+        } else {
+            Snackbar.make(top_view, "LocationService OK", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
+        }
+
+        val gpsEnabled = SmartLocation.with(this.applicationContext).location().state().isGpsAvailable
+        if (!gpsEnabled) {
+            Snackbar.make(top_view, "GPS not enabled", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
+        } else {
+            Snackbar.make(top_view, "GPS OK", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
+        }
+    }
+
+    /**
+     * @deprecated
+     */
+    private fun initLocationDeprecated() {
         Log.d(this.klass, "location is set")
         this.location = SimpleLocation(this, true, false, 5 * 1000, true)
         // if we can't access the location yet
@@ -152,10 +166,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun pushLocation(): String? {
+    fun pushLocation(lat: Double, lon: Double, speed: Float): String? {
         val client = OkHttpClient()
 
-        val url = "http://192.168.1.6/robots.txt"
+        val url = "http://192.168.1.6/whereismybus/api.php?lat="+lat.toString()+"&lon="+lon.toString()+"&speed="+speed.toString()
         val request = Request.Builder()
                 .url(url)
                 .build()
