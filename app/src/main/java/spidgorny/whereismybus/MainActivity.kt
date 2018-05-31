@@ -18,6 +18,8 @@ import io.nlopez.smartlocation.OnLocationUpdatedListener
 import io.nlopez.smartlocation.SmartLocation
 import kotlinx.android.synthetic.main.content_main.*
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.provider.Settings
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
@@ -106,7 +108,11 @@ class MainActivity : AppCompatActivity() {
         return Settings.Secure.getString(applicationContext.contentResolver, Settings.Secure.ANDROID_ID);
     }
 
-    private fun initFAB() {
+	private var defaultFABColor: ColorStateList? = ColorStateList.valueOf(0)
+
+	private fun initFAB() {
+		Log.d(this.klass, "FAB Color: " + fab.backgroundTintList)
+		this.defaultFABColor = fab.backgroundTintList // -49023
 		fab.setOnClickListener { view ->
 			Log.d(this.klass, "FAB click")
 //            val latitude = location!!.latitude
@@ -114,8 +120,12 @@ class MainActivity : AppCompatActivity() {
 //            val speed = location!!.speed
 			if (this.enabled) {
 				this.enabled = false
+				fab.backgroundTintList = if (this.defaultFABColor != null)
+					this.defaultFABColor
+					else ColorStateList.valueOf(Color.RED)
 			} else {
 				if (!this.checkPermissions()) {
+					fab.backgroundTintList = ColorStateList.valueOf(Color.GRAY)
 					this.initPermissions()
 				} else {
 					this.enableSendingData()
@@ -127,6 +137,7 @@ class MainActivity : AppCompatActivity() {
 	protected fun enableSendingData() {
 		if (this.initLocation()) {
 			this.enabled = true
+			fab.backgroundTintList = ColorStateList.valueOf(Color.GREEN)
 			this.updateLocation()
 		}
 	}
@@ -152,7 +163,7 @@ class MainActivity : AppCompatActivity() {
 			Snackbar.make(context, "GPS OK", Snackbar.LENGTH_LONG)
 					.setAction("Action", null).show()
 		}
-		return lsEnabled && gpsEnabled;
+		return lsEnabled && gpsEnabled
 	}
 
 	/**
@@ -185,13 +196,17 @@ class MainActivity : AppCompatActivity() {
 					val latitude = it.latitude
 					val longitude = it.longitude
 					val speed = it.speed
+					val bearing = it.bearing
 
-					val location = latitude.toString() + "," + longitude.toString() + " speed: " + speed.toString()
+					val location = latitude.toString() + "," + longitude.toString()+
+						" speed: " + speed.toString() +
+						" bearing: " + bearing.toString()
 					Log.d(this.klass, location)
 					Snackbar.make(this.layout1, location, Snackbar.LENGTH_LONG)
 							.setAction("Action", null).show()
 
-					val response = this.pushLocation(latitude, longitude, speed)
+					Log.d(this.klass, "Pushing...")
+					val response = this.pushLocation(latitude, longitude, speed, bearing)
 					Snackbar.make(this.layout1, response.toString(), Snackbar.LENGTH_LONG)
 							.setAction("Action", null).show()
 
@@ -214,10 +229,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun pushLocation(lat: Double, lon: Double, speed: Float): String? {
+    fun pushLocation(lat: Double, lon: Double, speed: Float, bearing: Float): String? {
         val client = OkHttpClient()
 
-        val url = "http://192.168.1.6/whereismybus/api.php?lat="+lat.toString()+"&lon="+lon.toString()+"&speed="+speed.toString()
+        val url = "http://where-is-my-bus.now.sh/ping"+
+				"?deviceid="+this.getDeviceID()+
+				"?lat="+lat.toString()+
+				"&lon="+lon.toString()+
+				"&speed="+speed.toString()+
+				"&bearing="+bearing.toString()
+		Log.d(this.klass, url)
         val request = Request.Builder()
                 .url(url)
                 .build()
