@@ -20,6 +20,8 @@ class LocationPushService(protected val activity: MainActivity) {
 	}
 
 	protected fun updateLocation() {
+		Snackbar.make(this.activity.layout1, "Checking GPS...", Snackbar.LENGTH_LONG)
+				.setAction("Action", null).show()
 		SmartLocation.with(this.activity.applicationContext).location()
 				.oneFix()
 				.start(OnLocationUpdatedListener() {
@@ -35,8 +37,8 @@ class LocationPushService(protected val activity: MainActivity) {
 
 					this.activity.tvLocation.text = sLocation
 
-					Snackbar.make(this.activity.layout1, sLocation, Snackbar.LENGTH_LONG)
-							.setAction("Action", null).show()
+//					Snackbar.make(this.activity.layout1, sLocation, Snackbar.LENGTH_LONG)
+//							.setAction("Action", null).show()
 
 					Log.d(this.klass, "Pushing...")
 					this.pushLocation(latitude, longitude, speed, bearing)
