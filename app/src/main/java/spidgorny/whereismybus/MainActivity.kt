@@ -10,19 +10,15 @@ import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
 import java.io.IOException
 import android.os.StrictMode
 import android.util.Log
 import im.delight.android.location.SimpleLocation
 import io.nlopez.smartlocation.OnLocationUpdatedListener
 import io.nlopez.smartlocation.SmartLocation
-import io.nlopez.smartlocation.location.config.LocationParams
 import kotlinx.android.synthetic.main.content_main.*
-import android.Manifest.permission
-import android.Manifest.permission.ACCESS_COARSE_LOCATION
-import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.pm.PackageManager
+import android.provider.Settings
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 
@@ -33,7 +29,7 @@ class MainActivity : AppCompatActivity() {
 
     private var location: SimpleLocation? = null
 
-    private val MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1
+    private val MY_PERMISSIONS_REQUEST_LOCATION = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +39,19 @@ class MainActivity : AppCompatActivity() {
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
 
+		this.onActivityCreated()
+    }
+
+	/**
+	 * Does not override anything
+	 */
+	fun onActivityCreated() {
+		this.initPermissions()
+		this.initUI()
+		this.initFAB()
+	}
+
+	private fun initPermissions() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
@@ -54,9 +63,92 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION),
-                    MY_PERMISSIONS_REQUEST_READ_CONTACTS)
+                    MY_PERMISSIONS_REQUEST_LOCATION)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int,
+                                            permissions: Array<String>, grantResults: IntArray) {
+        when (requestCode) {
+            MY_PERMISSIONS_REQUEST_LOCATION -> {
+                // If request is cancelled, the result arrays are empty.
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                    this.initLocation()
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return
+            }
+
+        // Add other 'when' lines to check for other
+        // permissions this app might request.
+            else -> {
+                // Ignore all other requests.
+            }
+        }
+    }
+
+    private fun initLocation() {
+//        val context = getActivity(this).findViewById(android.R.id.content)
+        val context = this.layout1
+
+        val lsEnabled = SmartLocation.with(this.applicationContext).location().state().locationServicesEnabled()
+        if (!lsEnabled) {
+            Snackbar.make(context, "LocationService not enabled", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
+        } else {
+            Snackbar.make(context, "LocationService OK", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
         }
 
+        val gpsEnabled = SmartLocation.with(this.applicationContext).location().state().isGpsAvailable
+        if (!gpsEnabled) {
+            Snackbar.make(context, "GPS not enabled", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
+        } else {
+            Snackbar.make(context, "GPS OK", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show()
+        }
+    }
+
+    /**
+     * @deprecated
+     */
+    private fun initLocationDeprecated() {
+        Log.d(this.klass, "location is set")
+        this.location = SimpleLocation(this, true, false, 5 * 1000, true)
+        // if we can't access the location yet
+        if (!this.location!!.hasLocationEnabled()) {
+            // ask the user to enable location access
+            SimpleLocation.openSettings(this)
+        }
+
+        location!!.setListener({
+            fun onPositionChanged() {
+                val latitude = location!!.latitude
+                val longitude = location!!.longitude
+                val speed = location!!.speed
+                val location = latitude.toString() + "," + longitude.toString() + " speed: " + speed.toString()
+                Log.d(this.klass + " onPosChg", location)
+            }
+        })
+    }
+
+    private fun initUI() {
+        // ec124bcd7a25bc02
+        Log.d(this.klass, this.getDeviceID())
+        this.deviceID.text = this.getDeviceID()
+    }
+
+    private fun getDeviceID(): String? {
+        return Settings.Secure.getString(applicationContext.contentResolver, Settings.Secure.ANDROID_ID);
+    }
+
+    private fun initFAB() {
         fab.setOnClickListener { view ->
             Log.d(this.klass, "FAB click")
 //            val latitude = location!!.latitude
@@ -80,74 +172,6 @@ class MainActivity : AppCompatActivity() {
 
                     })
         }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
-        when (requestCode) {
-            MY_PERMISSIONS_REQUEST_READ_CONTACTS -> {
-                // If request is cancelled, the result arrays are empty.
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-
-                    this.initLocation()
-                } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                }
-                return
-            }
-
-        // Add other 'when' lines to check for other
-        // permissions this app might request.
-            else -> {
-                // Ignore all other requests.
-            }
-        }
-    }
-
-    private fun initLocation() {
-        val lsEnabled = SmartLocation.with(this.applicationContext).location().state().locationServicesEnabled()
-        if (!lsEnabled) {
-            Snackbar.make(top_view, "LocationService not enabled", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        } else {
-            Snackbar.make(top_view, "LocationService OK", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
-
-        val gpsEnabled = SmartLocation.with(this.applicationContext).location().state().isGpsAvailable
-        if (!gpsEnabled) {
-            Snackbar.make(top_view, "GPS not enabled", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        } else {
-            Snackbar.make(top_view, "GPS OK", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
-    }
-
-    /**
-     * @deprecated
-     */
-    private fun initLocationDeprecated() {
-        Log.d(this.klass, "location is set")
-        this.location = SimpleLocation(this, true, false, 5 * 1000, true)
-        // if we can't access the location yet
-        if (!this.location!!.hasLocationEnabled()) {
-            // ask the user to enable location access
-            SimpleLocation.openSettings(this)
-        }
-
-        location!!.setListener({
-            fun onPositionChanged() {
-                val latitude = location!!.latitude
-                val longitude = location!!.longitude
-                val speed = location!!.speed
-                val location = latitude.toString() + "," + longitude.toString() + " speed: " + speed.toString()
-                Log.d(this.klass + " onPositionChanged", location)
-            }
-        })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
