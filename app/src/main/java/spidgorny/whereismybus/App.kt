@@ -12,6 +12,6 @@ class App : Application() {
 	override fun onCreate() {
 		Log.d(this.klass, "App.onCreate")
 		super.onCreate()
-		JobManager.create(this).addJobCreator(UpdateLocationJobCreator())
+//		JobManager.create(this).addJobCreator(UpdateLocationJobCreator())
 	}
 }

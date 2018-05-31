@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 		this.onActivityCreated()
 
 		this.locationPushService = LocationPushService(this)
-		JobManager.create(this).addJobCreator(UpdateLocationJobCreator())
+//		JobManager.create(this).addJobCreator(UpdateLocationJobCreator())
     }
 
 	/**
@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity() {
 			if (this.enabled) {
 				this.enabled = false
 				this.jobID?.let {
-					JobManager.instance().cancel(it)
+//					JobManager.instance().cancel(it)
 				}
 				fab.backgroundTintList = if (this.defaultFABColor != null)
 					this.defaultFABColor
@@ -149,8 +149,14 @@ class MainActivity : AppCompatActivity() {
 			this.enabled = true
 			fab.backgroundTintList = ColorStateList.valueOf(Color.GREEN)
 //			this.updateLocation()
-			this.jobID = UpdateLocationJob.scheduleJob()
 			this.locationPushService?.run()
+//			this.jobID = UpdateLocationJob.scheduleJob()
+			android.os.Handler().postDelayed(
+					{
+//						Log.i(this.klass, "This'll run 3000 milliseconds later")
+						this.enableSendingData()	// periodic
+					},
+					60000)
 		}
 	}
 
