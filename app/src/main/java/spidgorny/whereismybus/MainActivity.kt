@@ -23,6 +23,7 @@ import android.graphics.Color
 import android.provider.Settings
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import com.evernote.android.job.JobManager
 
 
 class MainActivity : AppCompatActivity() {
@@ -33,9 +34,11 @@ class MainActivity : AppCompatActivity() {
 
     private val MY_PERMISSIONS_REQUEST_LOCATION = 1
 
-	private var enabled = false;
+	private var enabled = false
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+	private var locationPushService: LocationPushService? = null
+
+	override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
@@ -44,6 +47,9 @@ class MainActivity : AppCompatActivity() {
         StrictMode.setThreadPolicy(policy)
 
 		this.onActivityCreated()
+
+		this.locationPushService = LocationPushService()
+		JobManager.create(this).addJobCreator(UpdateLocationJobCreator())
     }
 
 	/**
@@ -138,7 +144,9 @@ class MainActivity : AppCompatActivity() {
 		if (this.initLocation()) {
 			this.enabled = true
 			fab.backgroundTintList = ColorStateList.valueOf(Color.GREEN)
-			this.updateLocation()
+			//this.updateLocation()
+			UpdateLocationJob.scheduleJob()
+			this.locationPushService?.run()
 		}
 	}
 
