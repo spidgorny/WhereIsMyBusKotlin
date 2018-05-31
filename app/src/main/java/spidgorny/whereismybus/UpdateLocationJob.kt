@@ -27,8 +27,8 @@ class UpdateLocationJob(lps: LocationPushService) : Job() {
 
 		const val TAG = "UpdateLocationJob"
 
-		fun scheduleJob() {
-			JobRequest.Builder(UpdateLocationJob.TAG)
+		fun scheduleJob(): Int {
+			return JobRequest.Builder(UpdateLocationJob.TAG)
 					.setExecutionWindow(30_000L, 40_000L)
 					.build()
 					.schedule()

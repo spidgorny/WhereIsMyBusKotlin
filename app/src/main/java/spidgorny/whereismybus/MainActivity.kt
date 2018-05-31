@@ -8,8 +8,6 @@ import android.view.Menu
 import android.view.MenuItem
 
 import kotlinx.android.synthetic.main.activity_main.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import java.io.IOException
 import android.os.StrictMode
 import android.util.Log
@@ -24,6 +22,7 @@ import android.provider.Settings
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import com.evernote.android.job.JobManager
+import okhttp3.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -116,6 +115,8 @@ class MainActivity : AppCompatActivity() {
 
 	private var defaultFABColor: ColorStateList? = ColorStateList.valueOf(0)
 
+	private var jobID: Int? = null
+
 	private fun initFAB() {
 		Log.d(this.klass, "FAB Color: " + fab.backgroundTintList)
 		this.defaultFABColor = fab.backgroundTintList // -49023
@@ -126,6 +127,9 @@ class MainActivity : AppCompatActivity() {
 //            val speed = location!!.speed
 			if (this.enabled) {
 				this.enabled = false
+				this.jobID?.let {
+					JobManager.instance().cancel(it)
+				}
 				fab.backgroundTintList = if (this.defaultFABColor != null)
 					this.defaultFABColor
 					else ColorStateList.valueOf(Color.RED)
@@ -144,32 +148,34 @@ class MainActivity : AppCompatActivity() {
 		if (this.initLocation()) {
 			this.enabled = true
 			fab.backgroundTintList = ColorStateList.valueOf(Color.GREEN)
-			//this.updateLocation()
-			UpdateLocationJob.scheduleJob()
+			this.updateLocation()
+			this.jobID = UpdateLocationJob.scheduleJob()
 			this.locationPushService?.run()
 		}
 	}
 
 	private fun initLocation(): Boolean {
 //        val context = getActivity(this).findViewById(android.R.id.content)
-		val context = this.layout1
+//		val context = this.layout1
 
 		val lsEnabled = SmartLocation.with(this.applicationContext).location().state().locationServicesEnabled()
+		Log.d(this.klass, "Location Services: $lsEnabled")
 		if (!lsEnabled) {
-			Snackbar.make(context, "LocationService not enabled", Snackbar.LENGTH_LONG)
-					.setAction("Action", null).show()
+//			Snackbar.make(context, "LocationService not enabled", Snackbar.LENGTH_LONG)
+//					.setAction("Action", null).show()
 		} else {
-			Snackbar.make(context, "LocationService OK", Snackbar.LENGTH_LONG)
-					.setAction("Action", null).show()
+//			Snackbar.make(context, "LocationService OK", Snackbar.LENGTH_LONG)
+//					.setAction("Action", null).show()
 		}
 
 		val gpsEnabled = SmartLocation.with(this.applicationContext).location().state().isGpsAvailable
+		Log.d(this.klass, "GPS: $lsEnabled")
 		if (!gpsEnabled) {
-			Snackbar.make(context, "GPS not enabled", Snackbar.LENGTH_LONG)
-					.setAction("Action", null).show()
+//			Snackbar.make(context, "GPS not enabled", Snackbar.LENGTH_LONG)
+//					.setAction("Action", null).show()
 		} else {
-			Snackbar.make(context, "GPS OK", Snackbar.LENGTH_LONG)
-					.setAction("Action", null).show()
+//			Snackbar.make(context, "GPS OK", Snackbar.LENGTH_LONG)
+//					.setAction("Action", null).show()
 		}
 		return lsEnabled && gpsEnabled
 	}
@@ -206,18 +212,18 @@ class MainActivity : AppCompatActivity() {
 					val speed = it.speed
 					val bearing = it.bearing
 
-					val location = latitude.toString() + "," + longitude.toString()+
+					val sLocation = latitude.toString() + "," + longitude.toString()+
 						" speed: " + speed.toString() +
 						" bearing: " + bearing.toString()
-					Log.d(this.klass, location)
-					Snackbar.make(this.layout1, location, Snackbar.LENGTH_LONG)
+					Log.d(this.klass, sLocation)
+
+					tvLocation.text = sLocation
+
+					Snackbar.make(this.layout1, sLocation, Snackbar.LENGTH_LONG)
 							.setAction("Action", null).show()
 
 					Log.d(this.klass, "Pushing...")
-					val response = this.pushLocation(latitude, longitude, speed, bearing)
-					Snackbar.make(this.layout1, response.toString(), Snackbar.LENGTH_LONG)
-							.setAction("Action", null).show()
-
+					this.pushLocation(latitude, longitude, speed, bearing)
 				})
     }
 
@@ -237,10 +243,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun pushLocation(lat: Double, lon: Double, speed: Float, bearing: Float): String? {
+    fun pushLocation(lat: Double, lon: Double, speed: Float, bearing: Float) {
         val client = OkHttpClient()
 
-        val url = "http://where-is-my-bus.now.sh/ping"+
+        val url = "https://where-is-my-bus.now.sh/ping"+
 				"?deviceid="+this.getDeviceID()+
 				"?lat="+lat.toString()+
 				"&lon="+lon.toString()+
@@ -251,13 +257,25 @@ class MainActivity : AppCompatActivity() {
                 .url(url)
                 .build()
 
-        try {
-            val response = client.newCall(request).execute()
-            return response.body()?.string()
-        } catch (e: IOException) {
-            return e.toString()
-        }
-    }
+		client.newCall(request).enqueue(object : Callback {
+
+			override fun onFailure(call: Call, e: IOException) {
+				e.printStackTrace()
+			}
+
+			override fun onResponse(call: Call, response: Response) {
+				if (!response.isSuccessful) {
+					throw IOException("Unexpected code $response")
+				}
+				val html = response.body()?.string()
+
+				this@MainActivity.runOnUiThread {
+					Snackbar.make(this@MainActivity.layout1, html ?: "", Snackbar.LENGTH_LONG)
+							.setAction("Action", null).show()
+				}
+			}
+		})
+	}
 
     override fun onDestroy() {
         super.onDestroy()
