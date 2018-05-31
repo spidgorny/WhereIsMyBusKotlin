@@ -31,6 +31,8 @@ class MainActivity : AppCompatActivity() {
 
     private val MY_PERMISSIONS_REQUEST_LOCATION = 1
 
+	private var enabled = false;
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -46,25 +48,27 @@ class MainActivity : AppCompatActivity() {
 	 * Does not override anything
 	 */
 	fun onActivityCreated() {
-		this.initPermissions()
 		this.initUI()
 		this.initFAB()
 	}
 
+	private fun checkPermissions(): Boolean {
+		if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
+				PackageManager.PERMISSION_GRANTED &&
+				ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
+				PackageManager.PERMISSION_GRANTED) {
+			Log.d(this.klass, "Permissions OK")
+			return true
+		}
+		return false
+	}
+
 	private fun initPermissions() {
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
-                PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
-                PackageManager.PERMISSION_GRANTED) {
-            Log.d(this.klass, "Permissions OK")
-            this.initLocation()
-        } else {
-            Log.d(this.klass, "Permissions Request")
-            ActivityCompat.requestPermissions(this, arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION),
-                    MY_PERMISSIONS_REQUEST_LOCATION)
-        }
+		Log.d(this.klass, "Permissions Request")
+		ActivityCompat.requestPermissions(this, arrayOf(
+				Manifest.permission.ACCESS_FINE_LOCATION,
+				Manifest.permission.ACCESS_COARSE_LOCATION),
+				MY_PERMISSIONS_REQUEST_LOCATION)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int,
@@ -76,7 +80,7 @@ class MainActivity : AppCompatActivity() {
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
 
-                    this.initLocation()
+                    this.enableSendingData()
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
@@ -92,52 +96,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initLocation() {
-//        val context = getActivity(this).findViewById(android.R.id.content)
-        val context = this.layout1
-
-        val lsEnabled = SmartLocation.with(this.applicationContext).location().state().locationServicesEnabled()
-        if (!lsEnabled) {
-            Snackbar.make(context, "LocationService not enabled", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        } else {
-            Snackbar.make(context, "LocationService OK", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
-
-        val gpsEnabled = SmartLocation.with(this.applicationContext).location().state().isGpsAvailable
-        if (!gpsEnabled) {
-            Snackbar.make(context, "GPS not enabled", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        } else {
-            Snackbar.make(context, "GPS OK", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
-    }
-
-    /**
-     * @deprecated
-     */
-    private fun initLocationDeprecated() {
-        Log.d(this.klass, "location is set")
-        this.location = SimpleLocation(this, true, false, 5 * 1000, true)
-        // if we can't access the location yet
-        if (!this.location!!.hasLocationEnabled()) {
-            // ask the user to enable location access
-            SimpleLocation.openSettings(this)
-        }
-
-        location!!.setListener({
-            fun onPositionChanged() {
-                val latitude = location!!.latitude
-                val longitude = location!!.longitude
-                val speed = location!!.speed
-                val location = latitude.toString() + "," + longitude.toString() + " speed: " + speed.toString()
-                Log.d(this.klass + " onPosChg", location)
-            }
-        })
-    }
-
     private fun initUI() {
         // ec124bcd7a25bc02
         Log.d(this.klass, this.getDeviceID())
@@ -149,29 +107,95 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initFAB() {
-        fab.setOnClickListener { view ->
-            Log.d(this.klass, "FAB click")
+		fab.setOnClickListener { view ->
+			Log.d(this.klass, "FAB click")
 //            val latitude = location!!.latitude
 //            val longitude = location!!.longitude
 //            val speed = location!!.speed
-            SmartLocation.with(this.applicationContext).location()
-                    .oneFix()
-                    .start(OnLocationUpdatedListener() {
-                        val latitude = it.latitude
-                        val longitude = it.longitude
-                        val speed = it.speed
+			if (this.enabled) {
+				this.enabled = false
+			} else {
+				if (!this.checkPermissions()) {
+					this.initPermissions()
+				} else {
+					this.enableSendingData()
+				}
+			}
+		}
+	}
 
-                        val location = latitude.toString() + "," + longitude.toString() + " speed: " + speed.toString()
-                        Log.d(this.klass, location)
-                        Snackbar.make(view, location, Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show()
+	protected fun enableSendingData() {
+		if (this.initLocation()) {
+			this.enabled = true
+			this.updateLocation()
+		}
+	}
 
-                        val response = this.pushLocation(latitude, longitude, speed)
-                        Snackbar.make(view, response.toString(), Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show()
+	private fun initLocation(): Boolean {
+//        val context = getActivity(this).findViewById(android.R.id.content)
+		val context = this.layout1
 
-                    })
-        }
+		val lsEnabled = SmartLocation.with(this.applicationContext).location().state().locationServicesEnabled()
+		if (!lsEnabled) {
+			Snackbar.make(context, "LocationService not enabled", Snackbar.LENGTH_LONG)
+					.setAction("Action", null).show()
+		} else {
+			Snackbar.make(context, "LocationService OK", Snackbar.LENGTH_LONG)
+					.setAction("Action", null).show()
+		}
+
+		val gpsEnabled = SmartLocation.with(this.applicationContext).location().state().isGpsAvailable
+		if (!gpsEnabled) {
+			Snackbar.make(context, "GPS not enabled", Snackbar.LENGTH_LONG)
+					.setAction("Action", null).show()
+		} else {
+			Snackbar.make(context, "GPS OK", Snackbar.LENGTH_LONG)
+					.setAction("Action", null).show()
+		}
+		return lsEnabled && gpsEnabled;
+	}
+
+	/**
+	 * @deprecated
+	 */
+	private fun initLocationDeprecated() {
+		Log.d(this.klass, "location is set")
+		this.location = SimpleLocation(this, true, false, 5 * 1000, true)
+		// if we can't access the location yet
+		if (!this.location!!.hasLocationEnabled()) {
+			// ask the user to enable location access
+			SimpleLocation.openSettings(this)
+		}
+
+		location!!.setListener({
+			fun onPositionChanged() {
+				val latitude = location!!.latitude
+				val longitude = location!!.longitude
+				val speed = location!!.speed
+				val location = latitude.toString() + "," + longitude.toString() + " speed: " + speed.toString()
+				Log.d(this.klass + " onPosChg", location)
+			}
+		})
+	}
+
+	protected fun updateLocation() {
+		SmartLocation.with(this.applicationContext).location()
+				.oneFix()
+				.start(OnLocationUpdatedListener() {
+					val latitude = it.latitude
+					val longitude = it.longitude
+					val speed = it.speed
+
+					val location = latitude.toString() + "," + longitude.toString() + " speed: " + speed.toString()
+					Log.d(this.klass, location)
+					Snackbar.make(this.layout1, location, Snackbar.LENGTH_LONG)
+							.setAction("Action", null).show()
+
+					val response = this.pushLocation(latitude, longitude, speed)
+					Snackbar.make(this.layout1, response.toString(), Snackbar.LENGTH_LONG)
+							.setAction("Action", null).show()
+
+				})
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
