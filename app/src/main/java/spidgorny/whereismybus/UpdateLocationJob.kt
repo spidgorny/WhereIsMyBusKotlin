@@ -29,7 +29,16 @@ class UpdateLocationJob(lps: LocationPushService) : Job() {
 
 		fun scheduleJob(): Int {
 			return JobRequest.Builder(UpdateLocationJob.TAG)
-					.setExecutionWindow(30_000L, 40_000L)
+					.setExecutionWindow(60_000L, 120_000L)
+					.setBackoffCriteria(5_000L, JobRequest.BackoffPolicy.EXPONENTIAL)
+//					.setRequiresCharging(true)
+					.setRequiresDeviceIdle(false)
+					.setRequiredNetworkType(JobRequest.NetworkType.CONNECTED)
+//					.setExtras(extras)
+					.setRequirementsEnforced(true)
+					.setUpdateCurrent(true)
+//					.setPeriodic(JobRequest.MIN_INTERVAL, JobRequest.MIN_FLEX)
+					.setPeriodic(30_000L, JobRequest.MIN_FLEX)
 					.build()
 					.schedule()
 		}

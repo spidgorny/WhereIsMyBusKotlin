@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
 
 		this.onActivityCreated()
 
-		this.locationPushService = LocationPushService()
+		this.locationPushService = LocationPushService(this)
 		JobManager.create(this).addJobCreator(UpdateLocationJobCreator())
     }
 
@@ -109,7 +109,7 @@ class MainActivity : AppCompatActivity() {
         this.deviceID.text = this.getDeviceID()
     }
 
-    private fun getDeviceID(): String? {
+    fun getDeviceID(): String? {
         return Settings.Secure.getString(applicationContext.contentResolver, Settings.Secure.ANDROID_ID);
     }
 
@@ -148,7 +148,7 @@ class MainActivity : AppCompatActivity() {
 		if (this.initLocation()) {
 			this.enabled = true
 			fab.backgroundTintList = ColorStateList.valueOf(Color.GREEN)
-			this.updateLocation()
+//			this.updateLocation()
 			this.jobID = UpdateLocationJob.scheduleJob()
 			this.locationPushService?.run()
 		}
@@ -203,30 +203,6 @@ class MainActivity : AppCompatActivity() {
 		})
 	}
 
-	protected fun updateLocation() {
-		SmartLocation.with(this.applicationContext).location()
-				.oneFix()
-				.start(OnLocationUpdatedListener() {
-					val latitude = it.latitude
-					val longitude = it.longitude
-					val speed = it.speed
-					val bearing = it.bearing
-
-					val sLocation = latitude.toString() + ", " + longitude.toString()+
-						" speed: " + speed.toString() +
-						" bearing: " + bearing.toString()
-					Log.d(this.klass, sLocation)
-
-					tvLocation.text = sLocation
-
-					Snackbar.make(this.layout1, sLocation, Snackbar.LENGTH_LONG)
-							.setAction("Action", null).show()
-
-					Log.d(this.klass, "Pushing...")
-					this.pushLocation(latitude, longitude, speed, bearing)
-				})
-    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -242,44 +218,6 @@ class MainActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
-
-    fun pushLocation(lat: Double, lon: Double, speed: Float, bearing: Float) {
-        val client = OkHttpClient()
-
-        val url = "https://where-is-my-bus.now.sh/ping"
-        val builder = HttpUrl.parse(url)?.newBuilder()
-		builder?.addQueryParameter("deviceid", this.getDeviceID())
-		builder?.addQueryParameter("lat", lat.toString())
-		builder?.addQueryParameter("lon", lon.toString())
-		builder?.addQueryParameter("speed", speed.toString())
-		builder?.addQueryParameter("bearing", bearing.toString())
-
-		builder?.let {
-			Log.d(this.klass, builder?.build().toString())
-			val request = Request.Builder()
-					.url(builder?.build().toString())
-					.build()
-
-			client.newCall(request).enqueue(object : Callback {
-
-				override fun onFailure(call: Call, e: IOException) {
-					e.printStackTrace()
-				}
-
-				override fun onResponse(call: Call, response: Response) {
-					if (!response.isSuccessful) {
-						throw IOException("Unexpected code $response")
-					}
-					val html = response.body()?.string()
-
-					this@MainActivity.runOnUiThread {
-						Snackbar.make(this@MainActivity.layout1, html ?: "", Snackbar.LENGTH_LONG)
-								.setAction("Action", null).show()
-					}
-				}
-			})
-		}
-	}
 
     override fun onDestroy() {
         super.onDestroy()

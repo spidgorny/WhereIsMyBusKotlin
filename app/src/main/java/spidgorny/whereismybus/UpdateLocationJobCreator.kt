@@ -11,7 +11,7 @@ class UpdateLocationJobCreator : JobCreator {
 	@Nullable
 	override fun create(tag: String): Job? {
 		when (tag) {
-			UpdateLocationJob.TAG -> return UpdateLocationJob(LocationPushService())
+			UpdateLocationJob.TAG -> return UpdateLocationJob(LocationPushService(MainActivity()))
 			else -> return null
 		}
 	}
