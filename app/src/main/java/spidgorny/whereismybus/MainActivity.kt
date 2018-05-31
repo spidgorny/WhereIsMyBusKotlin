@@ -212,7 +212,7 @@ class MainActivity : AppCompatActivity() {
 					val speed = it.speed
 					val bearing = it.bearing
 
-					val sLocation = latitude.toString() + "," + longitude.toString()+
+					val sLocation = latitude.toString() + ", " + longitude.toString()+
 						" speed: " + speed.toString() +
 						" bearing: " + bearing.toString()
 					Log.d(this.klass, sLocation)
@@ -246,35 +246,39 @@ class MainActivity : AppCompatActivity() {
     fun pushLocation(lat: Double, lon: Double, speed: Float, bearing: Float) {
         val client = OkHttpClient()
 
-        val url = "https://where-is-my-bus.now.sh/ping"+
-				"?deviceid="+this.getDeviceID()+
-				"?lat="+lat.toString()+
-				"&lon="+lon.toString()+
-				"&speed="+speed.toString()+
-				"&bearing="+bearing.toString()
-		Log.d(this.klass, url)
-        val request = Request.Builder()
-                .url(url)
-                .build()
+        val url = "https://where-is-my-bus.now.sh/ping"
+        val builder = HttpUrl.parse(url)?.newBuilder()
+		builder?.addQueryParameter("deviceid", this.getDeviceID())
+		builder?.addQueryParameter("lat", lat.toString())
+		builder?.addQueryParameter("lon", lon.toString())
+		builder?.addQueryParameter("speed", speed.toString())
+		builder?.addQueryParameter("bearing", bearing.toString())
 
-		client.newCall(request).enqueue(object : Callback {
+		builder?.let {
+			Log.d(this.klass, builder?.build().toString())
+			val request = Request.Builder()
+					.url(builder?.build().toString())
+					.build()
 
-			override fun onFailure(call: Call, e: IOException) {
-				e.printStackTrace()
-			}
+			client.newCall(request).enqueue(object : Callback {
 
-			override fun onResponse(call: Call, response: Response) {
-				if (!response.isSuccessful) {
-					throw IOException("Unexpected code $response")
+				override fun onFailure(call: Call, e: IOException) {
+					e.printStackTrace()
 				}
-				val html = response.body()?.string()
 
-				this@MainActivity.runOnUiThread {
-					Snackbar.make(this@MainActivity.layout1, html ?: "", Snackbar.LENGTH_LONG)
-							.setAction("Action", null).show()
+				override fun onResponse(call: Call, response: Response) {
+					if (!response.isSuccessful) {
+						throw IOException("Unexpected code $response")
+					}
+					val html = response.body()?.string()
+
+					this@MainActivity.runOnUiThread {
+						Snackbar.make(this@MainActivity.layout1, html ?: "", Snackbar.LENGTH_LONG)
+								.setAction("Action", null).show()
+					}
 				}
-			}
-		})
+			})
+		}
 	}
 
     override fun onDestroy() {
