@@ -17,6 +17,7 @@ import kotlinx.android.synthetic.main.content_main.*
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.os.Debug.isDebuggerConnected
 import android.provider.Settings
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
@@ -51,7 +52,12 @@ class MainActivity : AppCompatActivity() {
 
 		this.locationPushService = LocationPushService(this)
 //		JobManager.create(this).addJobCreator(UpdateLocationJobCreator())
-    }
+
+//		city.text = if (BuildConfig.DEBUG) "Debug" else "Release"
+//		city.text = BuildConfig.BUILD_TYPE
+//		city.text = BuildConfig.IS_DEBUG_MODE.toString()
+		city.text = isDebuggerConnected().toString()
+	}
 
 	/**
 	 * Does not override anything

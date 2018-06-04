@@ -38,3 +38,13 @@ allprojects {
         maven { url "https://jitpack.io" }
     }
 }
+
+//buildTypes {
+//    debug {
+//        buildConfigField "Boolean", "IS_DEBUG_MODE", 'true'
+//    }
+//
+//    release {
+//        buildConfigField "Boolean", "IS_DEBUG_MODE", 'false'
+//    }
+//}
