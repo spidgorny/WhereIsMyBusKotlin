@@ -1,0 +1,43 @@
+package spidgorny.whereismybus;
+
+import android.content.Context
+import android.util.Log;
+
+import im.delight.android.location.SimpleLocation;
+
+public class SimpleLocationAdapter {
+
+    val klass = "SimpleLocationAdapter"
+
+    var context: Context;
+
+    var location: SimpleLocation? = null
+
+    constructor(context: Context) {
+        this.context = context;
+    }
+
+    /**
+     * @deprecated
+     */
+    private fun initLocationDeprecated() {
+        Log.d(this.klass, "location is set")
+        this.location = SimpleLocation(this.context, true, false, 5 * 1000, true)
+        // if we can't access the location yet
+        if (!this.location!!.hasLocationEnabled()) {
+            // ask the user to enable location access
+            SimpleLocation.openSettings(this.context)
+        }
+
+        location!!.setListener({
+                        fun onPositionChanged() {
+                        val latitude = location!!.latitude
+                        val longitude = location!!.longitude
+                val speed = location!!.speed
+        val location = latitude.toString() + "," + longitude.toString() + " speed: " + speed.toString()
+        Log.d(this.klass, location)
+			}
+		})
+    }
+
+}

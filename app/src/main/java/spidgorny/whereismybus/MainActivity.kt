@@ -6,13 +6,12 @@ import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.IOException
 import android.os.StrictMode
 import android.util.Log
-import im.delight.android.location.SimpleLocation
-import io.nlopez.smartlocation.OnLocationUpdatedListener
+//import im.delight.android.location.SimpleLocation
+//import io.nlopez.smartlocation.OnLocationUpdatedListener
 import io.nlopez.smartlocation.SmartLocation
 import kotlinx.android.synthetic.main.content_main.*
 import android.content.pm.PackageManager
@@ -21,15 +20,17 @@ import android.graphics.Color
 import android.provider.Settings
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
-import com.evernote.android.job.JobManager
-import okhttp3.*
-
+import android.view.View
+//import com.evernote.android.job.JobManager
+//import okhttp3.*
+import com.crashlytics.android.Crashlytics
+import io.fabric.sdk.android.Fabric
 
 class MainActivity : AppCompatActivity() {
 
     private val klass = "MainActivity"
 
-    private var location: SimpleLocation? = null
+//    private var location: SimpleLocation? = null
 
     private val MY_PERMISSIONS_REQUEST_LOCATION = 1
 
@@ -39,7 +40,8 @@ class MainActivity : AppCompatActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+		Fabric.with(this, Crashlytics())
+		setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
@@ -120,8 +122,12 @@ class MainActivity : AppCompatActivity() {
 	private fun initFAB() {
 		Log.d(this.klass, "FAB Color: " + fab.backgroundTintList)
 		this.defaultFABColor = fab.backgroundTintList // -49023
-		fab.setOnClickListener { view ->
+		fab.setOnClickListener { view: View ->
 			Log.d(this.klass, "FAB click")
+
+//			Crashlytics.sharedInstance().crash()
+			throw RuntimeException("Shit happens")
+
 //            val latitude = location!!.latitude
 //            val longitude = location!!.longitude
 //            val speed = location!!.speed
@@ -186,29 +192,6 @@ class MainActivity : AppCompatActivity() {
 		return lsEnabled && gpsEnabled
 	}
 
-	/**
-	 * @deprecated
-	 */
-	private fun initLocationDeprecated() {
-		Log.d(this.klass, "location is set")
-		this.location = SimpleLocation(this, true, false, 5 * 1000, true)
-		// if we can't access the location yet
-		if (!this.location!!.hasLocationEnabled()) {
-			// ask the user to enable location access
-			SimpleLocation.openSettings(this)
-		}
-
-		location!!.setListener({
-			fun onPositionChanged() {
-				val latitude = location!!.latitude
-				val longitude = location!!.longitude
-				val speed = location!!.speed
-				val location = latitude.toString() + "," + longitude.toString() + " speed: " + speed.toString()
-				Log.d(this.klass + " onPosChg", location)
-			}
-		})
-	}
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -235,21 +218,26 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         // make the device update its location
-        if (this.location != null) {
-            this.location!!.beginUpdates()
-        }
+//        if (this.location != null) {
+//            this.location!!.beginUpdates()
+//        }
 
         // ...
     }
 
     override fun onPause() {
         // stop location updates (saves battery)
-        if (this.location != null) {
-            this.location!!.endUpdates()
-        }
+//        if (this.location != null) {
+//            this.location!!.endUpdates()
+//        }
 
         // ...
 
         super.onPause()
     }
+
+	override fun onBackPressed() {
+		moveTaskToBack(true)
+	}
+
 }

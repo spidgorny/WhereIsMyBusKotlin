@@ -2,7 +2,7 @@ package spidgorny.whereismybus
 
 import android.app.Application
 import android.util.Log
-import com.evernote.android.job.JobManager
+//import com.evernote.android.job.JobManager
 
 
 class App : Application() {
