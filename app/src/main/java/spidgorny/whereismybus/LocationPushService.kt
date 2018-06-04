@@ -1,6 +1,8 @@
 package spidgorny.whereismybus
 
 import android.content.Context
+import android.content.ContextWrapper
+import android.provider.Settings
 import android.support.design.widget.Snackbar
 import android.util.Log
 import io.nlopez.smartlocation.OnLocationUpdatedListener
@@ -10,7 +12,7 @@ import kotlinx.android.synthetic.main.content_main.*
 import okhttp3.*
 import java.io.IOException
 
-class LocationPushService(protected val activity: MainActivity) {
+class LocationPushService(base: Context) : ContextWrapper(base) {
 
 	protected val klass = "LocationPushService"
 
@@ -20,9 +22,9 @@ class LocationPushService(protected val activity: MainActivity) {
 	}
 
 	protected fun updateLocation() {
-		Snackbar.make(this.activity.layout1, "Checking GPS...", Snackbar.LENGTH_LONG)
-				.setAction("Action", null).show()
-		SmartLocation.with(this.activity.applicationContext).location()
+//		Snackbar.make(this, "Checking GPS...", Snackbar.LENGTH_LONG)
+//				.setAction("Action", null).show()
+		SmartLocation.with(this).location()
 				.oneFix()
 				.start(OnLocationUpdatedListener() {
 					val latitude = it.latitude
@@ -35,7 +37,7 @@ class LocationPushService(protected val activity: MainActivity) {
 							" bearing: " + bearing.toString()
 					Log.d(this.klass, sLocation)
 
-					this.activity.tvLocation.text = sLocation
+					this.updateUIlocation(sLocation)
 
 //					Snackbar.make(this.activity.layout1, sLocation, Snackbar.LENGTH_LONG)
 //							.setAction("Action", null).show()
@@ -50,7 +52,7 @@ class LocationPushService(protected val activity: MainActivity) {
 
 		val url = "https://where-is-my-bus.now.sh/ping"
 		val builder = HttpUrl.parse(url)?.newBuilder()
-		builder?.addQueryParameter("deviceid", this.activity.getDeviceID())
+		builder?.addQueryParameter("deviceid", this.getDeviceID())
 		builder?.addQueryParameter("lat", lat.toString())
 		builder?.addQueryParameter("lon", lon.toString())
 		builder?.addQueryParameter("speed", speed.toString())
@@ -74,14 +76,25 @@ class LocationPushService(protected val activity: MainActivity) {
 						throw IOException("Unexpected code $response")
 					}
 					val html = response.body()?.string()
-
-					this@LocationPushService.activity.runOnUiThread {
-						Snackbar.make(this@LocationPushService.activity.layout1, html ?: "", Snackbar.LENGTH_LONG)
-								.setAction("Action", null).show()
-					}
+					this@LocationPushService.updateUIsnack(html ?: "")
 				}
 			})
 		}
+	}
+
+	fun getDeviceID(): String? {
+		return Settings.Secure.getString(this.contentResolver, Settings.Secure.ANDROID_ID);
+	}
+
+	fun updateUIlocation(sLocation: String) {
+//		this.activity.tvLocation.text = sLocation
+	}
+
+	fun updateUIsnack(snack: String) {
+//		this.context.runOnUiThread {
+//			Snackbar.make(this@LocationPushService.activity.layout1, snack, Snackbar.LENGTH_LONG)
+//					.setAction("Action", null).show()
+//		}
 	}
 
 }

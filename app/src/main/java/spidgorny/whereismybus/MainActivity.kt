@@ -27,6 +27,9 @@ import android.view.View
 import com.crashlytics.android.Crashlytics
 import com.squareup.leakcanary.LeakCanary
 import io.fabric.sdk.android.Fabric
+import android.content.Intent
+import com.orhanobut.logger.AndroidLogAdapter
+import com.orhanobut.logger.Logger
 
 class MainActivity : AppCompatActivity() {
 
@@ -42,6 +45,7 @@ class MainActivity : AppCompatActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+		Logger.addLogAdapter(AndroidLogAdapter())
 
 		Fabric.with(this, Crashlytics())
 
@@ -53,7 +57,7 @@ class MainActivity : AppCompatActivity() {
 
 		this.onActivityCreated()
 
-		this.locationPushService = LocationPushService(this)
+//		this.locationPushService = LocationPushService(this)
 //		JobManager.create(this).addJobCreator(UpdateLocationJobCreator())
 
 //		city.text = if (BuildConfig.DEBUG) "Debug" else "Release"
@@ -131,7 +135,7 @@ class MainActivity : AppCompatActivity() {
 	private fun initFAB() {
 		Log.d(this.klass, "FAB Color: " + fab.backgroundTintList)
 		this.defaultFABColor = fab.backgroundTintList // -49023
-		fab.setOnClickListener { view: View ->
+		fab.setOnClickListener { _: View ->
 			Log.d(this.klass, "FAB click")
 
 //			Crashlytics.sharedInstance().crash()
@@ -141,13 +145,7 @@ class MainActivity : AppCompatActivity() {
 //            val longitude = location!!.longitude
 //            val speed = location!!.speed
 			if (this.enabled) {
-				this.enabled = false
-				this.jobID?.let {
-//					JobManager.instance().cancel(it)
-				}
-				fab.backgroundTintList = if (this.defaultFABColor != null)
-					this.defaultFABColor
-					else ColorStateList.valueOf(Color.RED)
+				this.disableSendingData()
 			} else {
 				if (!this.checkPermissions()) {
 					fab.backgroundTintList = ColorStateList.valueOf(Color.GRAY)
@@ -159,20 +157,33 @@ class MainActivity : AppCompatActivity() {
 		}
 	}
 
-	protected fun enableSendingData() {
+	private fun enableSendingData() {
 		if (this.initLocation()) {
 			this.enabled = true
 			fab.backgroundTintList = ColorStateList.valueOf(Color.GREEN)
-//			this.updateLocation()
-			this.locationPushService?.run()
-//			this.jobID = UpdateLocationJob.scheduleJob()
-			android.os.Handler().postDelayed(
-					{
-//						Log.i(this.klass, "This'll run 3000 milliseconds later")
-						this.enableSendingData()	// periodic
-					},
-					60000)
+
+			val startIntent = Intent(this@MainActivity, BusLocationService::class.java)
+			startIntent.action = Constants.ACTION.STARTFOREGROUND_ACTION
+			startService(startIntent)
+//			Logger.i("startService", startIntent)
+		} else {
+			this.snack("Location is not working")
 		}
+	}
+
+	private fun disableSendingData() {
+		this.enabled = false
+		this.jobID?.let {
+			//	JobManager.instance().cancel(it)
+		}
+		fab.backgroundTintList = if (this.defaultFABColor != null)
+			this.defaultFABColor
+			else ColorStateList.valueOf(Color.RED)
+
+		val startIntent = Intent(this@MainActivity, BusLocationService::class.java)
+		startIntent.action = Constants.ACTION.STOPFOREGROUND_ACTION
+		startService(startIntent)
+//		Logger.i("startService", startIntent)
 	}
 
 	private fun initLocation(): Boolean {
@@ -213,6 +224,9 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_settings -> {
+				return true
+			}
+            R.id.action_exit -> {
 				finish()
 				return true
 			}
@@ -250,6 +264,11 @@ class MainActivity : AppCompatActivity() {
 
 	override fun onBackPressed() {
 		moveTaskToBack(true)
+	}
+
+	fun snack(text: String) {
+		Snackbar.make(this.layout1, text, Snackbar.LENGTH_LONG)
+				.setAction("Action", null).show()
 	}
 
 }
