@@ -25,6 +25,7 @@ import android.view.View
 //import com.evernote.android.job.JobManager
 //import okhttp3.*
 import com.crashlytics.android.Crashlytics
+import com.squareup.leakcanary.LeakCanary
 import io.fabric.sdk.android.Fabric
 
 class MainActivity : AppCompatActivity() {
@@ -41,9 +42,11 @@ class MainActivity : AppCompatActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
 		Fabric.with(this, Crashlytics())
+
 		setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
+		setSupportActionBar(toolbar)
 
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
@@ -132,7 +135,7 @@ class MainActivity : AppCompatActivity() {
 			Log.d(this.klass, "FAB click")
 
 //			Crashlytics.sharedInstance().crash()
-			throw RuntimeException("Shit happens")
+//			throw RuntimeException("Shit happens")
 
 //            val latitude = location!!.latitude
 //            val longitude = location!!.longitude
@@ -209,7 +212,10 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_settings -> {
+				finish()
+				return true
+			}
             else -> super.onOptionsItemSelected(item)
         }
     }
