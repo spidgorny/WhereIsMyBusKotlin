@@ -28,6 +28,8 @@ import com.crashlytics.android.Crashlytics
 import com.squareup.leakcanary.LeakCanary
 import io.fabric.sdk.android.Fabric
 import android.content.Intent
+import android.os.Build
+import android.support.annotation.RequiresApi
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 
@@ -132,8 +134,9 @@ class MainActivity : AppCompatActivity() {
 
 	private var jobID: Int? = null
 
+	@RequiresApi(Build.VERSION_CODES.O)
 	private fun initFAB() {
-		Log.d(this.klass, "FAB Color: " + fab.backgroundTintList)
+//		Log.d(this.klass, "FAB Color: " + fab.backgroundTintList)
 		this.defaultFABColor = fab.backgroundTintList // -49023
 		fab.setOnClickListener { _: View ->
 			Log.d(this.klass, "FAB click")
@@ -157,6 +160,7 @@ class MainActivity : AppCompatActivity() {
 		}
 	}
 
+	@RequiresApi(Build.VERSION_CODES.O)
 	private fun enableSendingData() {
 		if (this.initLocation()) {
 			this.enabled = true
@@ -164,7 +168,7 @@ class MainActivity : AppCompatActivity() {
 
 			val startIntent = Intent(this@MainActivity, BusLocationService::class.java)
 			startIntent.action = Constants.ACTION.STARTFOREGROUND_ACTION
-			startService(startIntent)
+			startForegroundService(startIntent)
 //			Logger.i("startService", startIntent)
 		} else {
 			this.snack("Location is not working")
@@ -225,6 +229,9 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_settings -> {
 				return true
+			}
+            R.id.action_crash -> {
+				throw RuntimeException("Shit happens")
 			}
             R.id.action_exit -> {
 				finish()

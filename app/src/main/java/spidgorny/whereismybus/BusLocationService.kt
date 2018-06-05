@@ -1,5 +1,7 @@
 package spidgorny.whereismybus
 
+import android.annotation.TargetApi
+import android.app.Notification
 import android.os.Bundle
 import android.support.v4.content.ContextCompat.startActivity
 import android.content.Intent
@@ -9,12 +11,20 @@ import io.fabric.sdk.android.services.settings.IconRequest.build
 import android.graphics.BitmapFactory
 import android.app.PendingIntent
 import android.app.Service
+import android.os.Build
 import android.support.v4.app.ServiceCompat.stopForeground
 import android.os.IBinder
 import android.os.ResultReceiver
+import android.support.annotation.RequiresApi
 import android.support.v4.app.NotificationCompat
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Context.NOTIFICATION_SERVICE
+
+
 
 
 class BusLocationService : Service() {
@@ -36,10 +46,12 @@ class BusLocationService : Service() {
 		return null
 	}
 
+	@RequiresApi(Build.VERSION_CODES.O)
 	override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
 		Logger.i("onStartCommand")
 		if (intent.action == Constants.ACTION.STARTFOREGROUND_ACTION) {
 			Logger.i("Received Start Foreground Intent ")
+			registerChannel();
 			showNotification()
 			Toast.makeText(this, "Service Started!", Toast.LENGTH_SHORT).show()
 			startPermissionActivity()
@@ -51,6 +63,18 @@ class BusLocationService : Service() {
 		return START_STICKY
 	}
 
+	@TargetApi(Build.VERSION_CODES.O)
+	@RequiresApi(Build.VERSION_CODES.N)
+	private fun registerChannel() {
+		val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+		val channelName = "Where Is My Bus Channel"
+		val importance = NotificationManager.IMPORTANCE_LOW
+		val notificationChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, importance)
+		notificationManager.createNotificationChannel(notificationChannel)
+	}
+
+	@RequiresApi(Build.VERSION_CODES.O)
 	private fun showNotification() {
 		val notificationIntent = Intent(this, MainActivity::class.java)
 		notificationIntent.action = Constants.ACTION.STARTFOREGROUND_ACTION
@@ -66,7 +90,7 @@ class BusLocationService : Service() {
 		val icon = BitmapFactory.decodeResource(resources,
 				R.drawable.common_full_open_on_phone)
 
-		val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+		val notification = Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
 				.setContentTitle("AndroidGuitar")
 				.setTicker("AndroidGuitar")
 				.setContentText("Ready to play!")
@@ -75,6 +99,7 @@ class BusLocationService : Service() {
 				.setContentIntent(pendingIntent)
 				.setOngoing(true)
 				.addAction(android.R.drawable.ic_menu_close_clear_cancel, "close", buttonClosePendingIntent)
+				.setPriority(NotificationCompat.PRIORITY_DEFAULT)
 				.build()
 
 		startForeground(Constants.NOTIFICATION_ID.FOREGROUND_SERVICE,

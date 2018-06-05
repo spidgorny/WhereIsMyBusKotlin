@@ -22,6 +22,9 @@
         </activity>
         <service android:name=".BusLocationService" >
         </service>
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="e14c9e433ccc650ff7983d7aae83eaf318606e10" />
     </application>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
