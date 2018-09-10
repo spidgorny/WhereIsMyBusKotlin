@@ -45,6 +45,7 @@ class MainActivity : AppCompatActivity() {
 
 	private var locationPushService: LocationPushService? = null
 
+	@RequiresApi(Build.VERSION_CODES.O)
 	override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 		Logger.addLogAdapter(AndroidLogAdapter())
@@ -71,6 +72,7 @@ class MainActivity : AppCompatActivity() {
 	/**
 	 * Does not override anything
 	 */
+	@RequiresApi(Build.VERSION_CODES.O)
 	fun onActivityCreated() {
 		this.initUI()
 		this.initFAB()
@@ -95,8 +97,9 @@ class MainActivity : AppCompatActivity() {
 				MY_PERMISSIONS_REQUEST_LOCATION)
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
+    @RequiresApi(Build.VERSION_CODES.O)
+	override fun onRequestPermissionsResult(requestCode: Int,
+											permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             MY_PERMISSIONS_REQUEST_LOCATION -> {
                 // If request is cancelled, the result arrays are empty.

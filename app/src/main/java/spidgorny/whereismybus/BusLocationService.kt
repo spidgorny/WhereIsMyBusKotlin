@@ -53,7 +53,7 @@ class BusLocationService : Service() {
 			Logger.i("Received Start Foreground Intent ")
 			registerChannel();
 			showNotification()
-			Toast.makeText(this, "Service Started!", Toast.LENGTH_SHORT).show()
+			Toast.makeText(this, "Location Sharing Enabled", Toast.LENGTH_SHORT).show()
 			startPermissionActivity()
 		} else if (intent.action == Constants.ACTION.STOPFOREGROUND_ACTION) {
 			Logger.i("Received Stop Foreground Intent ")
@@ -91,28 +91,26 @@ class BusLocationService : Service() {
 				R.drawable.common_full_open_on_phone)
 
 		val notification = Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
-				.setContentTitle("AndroidGuitar")
-				.setTicker("AndroidGuitar")
-				.setContentText("Ready to play!")
+				.setContentTitle("Where is my Bus is active.")
+				.setTicker("Sending location to the server...")
+				.setContentText("Your location is sent to the server")
 				.setSmallIcon(R.drawable.common_full_open_on_phone)
 				.setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
 				.setContentIntent(pendingIntent)
 				.setOngoing(true)
-				.addAction(android.R.drawable.ic_menu_close_clear_cancel, "close", buttonClosePendingIntent)
+				.addAction(android.R.drawable.ic_menu_close_clear_cancel, "STOP", buttonClosePendingIntent)
 				.setPriority(NotificationCompat.PRIORITY_DEFAULT)
 				.build()
 
 		startForeground(Constants.NOTIFICATION_ID.FOREGROUND_SERVICE,
 				notification)
-
 	}
 
 	override fun onDestroy() {
 		super.onDestroy()
 		Logger.i("inDestroy")
-		Toast.makeText(this, "Service Destroyed!", Toast.LENGTH_SHORT).show()
+		Toast.makeText(this, "Location will not be sent", Toast.LENGTH_SHORT).show()
 	}
-
 
 	private fun startPermissionActivity() {
 		this.locationPushService.run()
