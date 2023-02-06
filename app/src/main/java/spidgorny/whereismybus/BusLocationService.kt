@@ -3,29 +3,26 @@ package spidgorny.whereismybus
 import android.annotation.TargetApi
 import android.app.Notification
 import android.os.Bundle
-import android.support.v4.content.ContextCompat.startActivity
+//import android.support.v4.content.ContextCompat.startActivity
 import android.content.Intent
 import android.widget.Toast
 import android.graphics.Bitmap
-import io.fabric.sdk.android.services.settings.IconRequest.build
+//import io.fabric.sdk.android.services.settings.IconRequest.build
 import android.graphics.BitmapFactory
 import android.app.PendingIntent
 import android.app.Service
 import android.os.Build
-import android.support.v4.app.ServiceCompat.stopForeground
+//import android.support.v4.app.ServiceCompat.stopForeground
 import android.os.IBinder
 import android.os.ResultReceiver
-import android.support.annotation.RequiresApi
-import android.support.v4.app.NotificationCompat
-import com.orhanobut.logger.AndroidLogAdapter
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
+//import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
-
-
-
 
 class BusLocationService : Service() {
 
@@ -80,12 +77,12 @@ class BusLocationService : Service() {
 		notificationIntent.action = Constants.ACTION.STARTFOREGROUND_ACTION
 		notificationIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
 		val pendingIntent = PendingIntent.getService(this, 0,
-				notificationIntent, 0)
+				notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 
 		// And now, building and attaching the Close button.
 		val buttonCloseIntent = Intent(this, BusLocationService::class.java)
 		buttonCloseIntent.action = Constants.ACTION.STOPFOREGROUND_ACTION
-		val buttonClosePendingIntent = PendingIntent.getService(this, 0, buttonCloseIntent, 0)
+		val buttonClosePendingIntent = PendingIntent.getService(this, 0, buttonCloseIntent, PendingIntent.FLAG_IMMUTABLE)
 
 		val icon = BitmapFactory.decodeResource(resources,
 				R.drawable.common_full_open_on_phone)
@@ -99,7 +96,7 @@ class BusLocationService : Service() {
 				.setContentIntent(pendingIntent)
 				.setOngoing(true)
 				.addAction(android.R.drawable.ic_menu_close_clear_cancel, "STOP", buttonClosePendingIntent)
-				.setPriority(NotificationCompat.PRIORITY_DEFAULT)
+				.setPriority(Notification.PRIORITY_DEFAULT)
 				.build()
 
 		startForeground(Constants.NOTIFICATION_ID.FOREGROUND_SERVICE,
@@ -116,7 +113,7 @@ class BusLocationService : Service() {
 		this.locationPushService.run()
 		android.os.Handler().postDelayed(
 				{
-					//							Log.i(this.klass, "This'll run 3000 milliseconds later")
+					//	Log.i(this.klass, "This'll run 3000 milliseconds later")
 					this@BusLocationService.startPermissionActivity()
 				},
 				60000)
@@ -135,7 +132,9 @@ class BusLocationService : Service() {
 				return
 			}
 			val message = resultData.getString(KEY_MESSAGE)
-			Logger.i(message)
+			message?.let {
+				Logger.i(message)
+			}
 		}
 
 	}

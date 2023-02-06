@@ -17,4 +17,8 @@ class Constants {
 			val FOREGROUND_SERVICE = 101
 		}
 	}
+
+	val NOTIFICATION_CHANNEL_ID = "my_channel_id_01"
+
+	var PUSHLOCATION_URL = ""
 }

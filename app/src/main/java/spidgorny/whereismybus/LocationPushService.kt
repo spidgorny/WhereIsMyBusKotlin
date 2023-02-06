@@ -3,12 +3,12 @@ package spidgorny.whereismybus
 import android.content.Context
 import android.content.ContextWrapper
 import android.provider.Settings
-import android.support.design.widget.Snackbar
+//import android.support.design.widget.Snackbar
 import android.util.Log
 import io.nlopez.smartlocation.OnLocationUpdatedListener
 import io.nlopez.smartlocation.SmartLocation
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.content_main.*
+//import kotlinx.android.synthetic.main.activity_main.*
+//import kotlinx.android.synthetic.main.content_main.*
 import okhttp3.*
 import java.io.IOException
 
@@ -32,7 +32,8 @@ class LocationPushService(base: Context) : ContextWrapper(base) {
 					val speed = it.speed
 					val bearing = it.bearing
 
-					val sLocation = latitude.toString() + ", " + longitude.toString()+
+					val sLocation = latitude.toString() +
+							", " + longitude.toString()+
 							" speed: " + speed.toString() +
 							" bearing: " + bearing.toString()
 					Log.d(this.klass, sLocation)
