@@ -2,9 +2,11 @@ package spidgorny.whereismybus
 
 import android.content.Context
 import android.content.ContextWrapper
+import android.location.Location
 import android.provider.Settings
 //import android.support.design.widget.Snackbar
 import android.util.Log
+import com.squareup.otto.Bus
 import io.nlopez.smartlocation.OnLocationUpdatedListener
 import io.nlopez.smartlocation.SmartLocation
 //import kotlinx.android.synthetic.main.activity_main.*
@@ -15,9 +17,11 @@ import java.io.IOException
 class LocationPushService(base: Context) : ContextWrapper(base) {
 
 	protected val klass = "LocationPushService"
+	private var bus: Bus? = null
 
 	fun run() {
 		Log.d(this.klass, "locationPushService.run")
+		this.bus = Globals.instance.getBus()
 		this.updateLocation()
 	}
 
@@ -32,13 +36,10 @@ class LocationPushService(base: Context) : ContextWrapper(base) {
 					val speed = it.speed
 					val bearing = it.bearing
 
-					val sLocation = latitude.toString() +
-							", " + longitude.toString()+
-							" speed: " + speed.toString() +
-							" bearing: " + bearing.toString()
+					val sLocation = "$latitude, $longitude speed: $speed bearing: $bearing"
 					Log.d(this.klass, sLocation)
 
-					this.updateUIlocation(sLocation)
+					this.updateUIlocation(it)
 
 //					Snackbar.make(this.activity.layout1, sLocation, Snackbar.LENGTH_LONG)
 //							.setAction("Action", null).show()
@@ -87,8 +88,10 @@ class LocationPushService(base: Context) : ContextWrapper(base) {
 		return Settings.Secure.getString(this.contentResolver, Settings.Secure.ANDROID_ID);
 	}
 
-	fun updateUIlocation(sLocation: String) {
+	fun updateUIlocation(loc: Location) {
 //		this.activity.tvLocation.text = sLocation
+		this.bus?.post(loc)
+
 	}
 
 	fun updateUIsnack(snack: String) {

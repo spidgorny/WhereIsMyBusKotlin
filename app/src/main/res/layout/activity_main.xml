@@ -37,7 +37,8 @@
     <include
         android:id="@+id/include"
         layout="@layout/content_main"
-        android:layout_height="401dp"/>
+        android:layout_height="401dp"
+        />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
@@ -48,6 +49,7 @@
         app:elevation="2dp"
         app:layout_anchor="@+id/include"
         app:layout_anchorGravity="right|bottom"
-        app:srcCompat="@android:drawable/ic_menu_send"/>
+        app:srcCompat="@android:drawable/ic_menu_send"
+        android:contentDescription="Enable/Disable Location Tracking" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

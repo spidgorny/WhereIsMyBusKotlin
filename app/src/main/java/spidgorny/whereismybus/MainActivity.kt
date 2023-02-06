@@ -14,11 +14,11 @@ package spidgorny.whereismybus
 //import kotlinx.android.synthetic.main.content_main.*
 
 import android.Manifest
-import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.location.Location
 import android.os.Build
 import android.os.Bundle
 import android.os.Debug.isDebuggerConnected
@@ -30,6 +30,7 @@ import android.view.MenuItem
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -41,6 +42,7 @@ import com.squareup.otto.Subscribe
 import io.nlopez.smartlocation.SmartLocation
 import spidgorny.whereismybus.databinding.ActivityMainBinding
 import spidgorny.whereismybus.databinding.ContentMainBinding
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -53,7 +55,7 @@ class MainActivity : AppCompatActivity() {
 
     private var enabled = false
 
-    private var locationPushService: LocationPushService? = null
+//    private var locationPushService: LocationPushService? = null
 
     private var bus: Bus? = null
 
@@ -61,43 +63,25 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ContentMainBinding
 
     private lateinit var fab: FloatingActionButton
+
     private var defaultFABColor: ColorStateList? = ColorStateList.valueOf(0)
 
     private var jobID: Int? = null
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Logger.addLogAdapter(AndroidLogAdapter())
         bindingMain = ActivityMainBinding.inflate(layoutInflater)
-        binding = ContentMainBinding.inflate(layoutInflater)
         setContentView(bindingMain.root)
 
-//        Fabric.with(this, Crashlytics())
-
-//        setContentView(R.layout.activity_main)
-//        val myToolbar = findViewById<Toolbar>(R.layout.toolbar)
-        val myToolbar = bindingMain.toolbar
-        setSupportActionBar(myToolbar)
+        binding = bindingMain.include
 
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
 
 //		this.locationPushService = LocationPushService(this)
 //		JobManager.create(this).addJobCreator(UpdateLocationJobCreator())
-
-//		city.text = if (BuildConfig.DEBUG) "Debug" else "Release"
-//		city.text = BuildConfig.BUILD_TYPE
-//		city.text = BuildConfig.IS_DEBUG_MODE.toString()
-        binding.debugEnabled.text = isDebuggerConnected().toString()
-        this.bus = Bus()
-        this.bus!!.register(this);
-        Log.d(this.klass, "emit 42");
-        this.bus!!.post(LocationUpdateEvent(42, 42))
-
-        this.fab = bindingMain.fab
-        Log.d(this.klass, this.fab.toString())
 
         this.onActivityCreated()
     }
@@ -109,11 +93,54 @@ class MainActivity : AppCompatActivity() {
     fun onActivityCreated() {
         this.initUI()
         this.initFAB()
+        this.testBus();
+    }
+
+    private fun initUI() {
+        val myToolbar = bindingMain.toolbar
+        setSupportActionBar(myToolbar)
+
+        // ec124bcd7a25bc02
+        val deviceID = this.getDeviceID()
+        deviceID?.let {
+            Log.d(this.klass, "getDeviceID=$it")
+            binding.deviceID.text = deviceID
+            binding.deviceID.invalidate();
+            binding.deviceID.requestLayout();
+        }
+
+        this.fab = bindingMain.fab
+        Log.d(this.klass, this.fab.toString())
+
+//		city.text = if (BuildConfig.DEBUG) "Debug" else "Release"
+//		city.text = BuildConfig.BUILD_TYPE
+//		city.text = BuildConfig.IS_DEBUG_MODE.toString()
+        binding.debugEnabled.text = isDebuggerConnected().toString()
+
+        binding.root.invalidate()
+    }
+    private fun testBus() {
+        this.bus = Globals.instance.getBus()
+        this.bus!!.register(this);
+        Log.d(this.klass, "emit 42");
+
+        val testLocation = Location("");
+        testLocation.latitude = 42.0
+        testLocation.longitude = 42.0
+        this.bus!!.post(testLocation)
     }
 
     @Subscribe
-    fun answerAvailable(event: LocationUpdateEvent?) {
-        Log.d(this.klass, "received " + event.toString());
+    fun locationUpdateFromService(event: Location) {
+        Log.d(this.klass, "received " + event.toString())
+        Logger.i("received", event)
+        runOnUiThread {
+            binding.updated.text = Calendar.getInstance().getTime().toString();
+            binding.tvLocation.text = "${event.latitude}, ${event.longitude}";
+            binding.tvLocation.invalidate();
+            binding.tvLocation.requestLayout();
+            Log.d(this.klass, "tvLocation: ${this.binding.tvLocation.text}")
+        }
     }
 
     private fun checkPermissions(): Boolean {
@@ -174,13 +201,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initUI() {
-        // ec124bcd7a25bc02
-        val deviceID = this.getDeviceID()
-        deviceID?.let { Log.d(this.klass, "getDeviceID=$it") }
-        binding.deviceID.text = deviceID
-    }
-
     fun getDeviceID(): String? {
         return Settings.Secure.getString(
             applicationContext.contentResolver,
@@ -194,9 +214,6 @@ class MainActivity : AppCompatActivity() {
         this.defaultFABColor = this.fab.backgroundTintList // -49023
         this.fab.setOnClickListener { _: View ->
             Log.d(this.klass, "FAB click")
-
-//			Crashlytics.sharedInstance().crash()
-//			throw RuntimeException("Shit happens")
 
 //            val latitude = location!!.latitude
 //            val longitude = location!!.longitude

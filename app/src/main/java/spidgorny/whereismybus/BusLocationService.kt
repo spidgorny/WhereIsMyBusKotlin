@@ -23,12 +23,14 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
+import com.squareup.otto.Bus
 
 class BusLocationService : Service() {
 
 	private lateinit var locationPushService: LocationPushService
 
 	private val NOTIFICATION_CHANNEL_ID = "my_channel_id_01"
+	private var bus: Bus? = null
 
 	override fun onCreate() {
 		super.onCreate()
