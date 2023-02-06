@@ -12,7 +12,7 @@ android {
     compileSdkVersion 33
     defaultConfig {
         applicationId "spidgorny.whereismybus"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 33
         versionCode 1
         versionName "1.0"
@@ -38,6 +38,9 @@ dependencies {
     implementation 'com.android.support.constraint:constraint-layout:2.0.4'
     implementation 'com.android.support:design:33.1.0'
     implementation 'com.google.android.material:material:1.8.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.5.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
 //    implementation 'com.google.firebase:firebase-crashlytics:17.2.1'
 //    implementation 'com.google.firebase:firebase-analytics:17.5.0'
     testImplementation 'junit:junit:4.12'
@@ -73,4 +76,7 @@ dependencies {
     releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:2.10'
 
     implementation 'com.orhanobut:logger:2.2.0'
+
+    implementation 'com.github.yuriy-budiyev:code-scanner:2.3.2'
+
 }
