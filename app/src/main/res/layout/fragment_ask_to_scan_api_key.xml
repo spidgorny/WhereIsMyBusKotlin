@@ -5,15 +5,26 @@
     android:layout_height="match_parent"
     tools:context=".AskToScanApiKey">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Hello" />
+        android:orientation="vertical"
+        android:padding="10dp">
 
-    <Button
-        android:id="@+id/scanQrCode"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Button" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Step1. We need to know which company and bus you are related to. Please scan the QR code on the Where is my Bus? site to connect this app to your company." />
+
+        <Button
+            android:id="@+id/btnScanQrCode"
+            android:layout_width="124dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:layout_marginTop="10dp"
+            android:drawableLeft="?attr/actionModeSelectAllDrawable"
+            android:onClick="@{() -> onClickScanQr()}"
+            android:text="Scan QR" />
+    </LinearLayout>
 
 </FrameLayout>
