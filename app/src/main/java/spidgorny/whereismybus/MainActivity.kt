@@ -30,7 +30,6 @@ import android.view.MenuItem
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -68,6 +67,8 @@ class MainActivity : AppCompatActivity() {
 
     private var jobID: Int? = null
 
+    private lateinit var apiKey: ApiKeyEvent
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,6 +77,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(bindingMain.root)
 
         binding = bindingMain.include
+        this.bus = Globals.instance.getBus()
 
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
@@ -119,8 +121,8 @@ class MainActivity : AppCompatActivity() {
 
         binding.root.invalidate()
     }
+
     private fun testBus() {
-        this.bus = Globals.instance.getBus()
         this.bus!!.register(this);
         Log.d(this.klass, "emit 42");
 
@@ -141,6 +143,12 @@ class MainActivity : AppCompatActivity() {
             binding.tvLocation.requestLayout();
             Log.d(this.klass, "tvLocation: ${this.binding.tvLocation.text}")
         }
+    }
+
+    @Subscribe
+    fun apiKeyScanned(event: ApiKeyEvent) {
+        Log.d(this.klass, "apiKeyScanned: $event");
+        this.apiKey = event;
     }
 
     private fun checkPermissions(): Boolean {
@@ -351,4 +359,17 @@ class MainActivity : AppCompatActivity() {
             .setAction("Action", null).show()
     }
 
+    override fun onSaveInstanceState(savedInstanceState: Bundle) {
+        super.onSaveInstanceState(savedInstanceState)
+        if (this::apiKey.isInitialized) {
+            apiKey?.let {
+                // Save UI state changes to the savedInstanceState.
+                // This bundle will be passed to onCreate if the process is
+                // killed and restarted.
+                savedInstanceState.putString("apiKey", apiKey!!.apiId)
+                savedInstanceState.putString("apiName", apiKey!!.apiName)
+                savedInstanceState.putString("apiSecrete", apiKey!!.apiSecret)
+            }
+        }
+    }
 }
