@@ -28,6 +28,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.View.GONE
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -56,7 +57,7 @@ class MainActivity : AppCompatActivity() {
 
 //    private var locationPushService: LocationPushService? = null
 
-    private var bus: Bus? = null
+    private lateinit var bus: Bus
 
     private lateinit var bindingMain: ActivityMainBinding
     private lateinit var binding: ContentMainBinding
@@ -69,6 +70,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var apiKey: ApiKeyEvent
 
+    lateinit var mState: Bundle;
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,6 +81,7 @@ class MainActivity : AppCompatActivity() {
 
         binding = bindingMain.include
         this.bus = Globals.instance.getBus()
+        this.bus.register(this);
 
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
@@ -88,6 +92,29 @@ class MainActivity : AppCompatActivity() {
         this.onActivityCreated()
     }
 
+    override fun onSaveInstanceState(savedInstanceState: Bundle) {
+        super.onSaveInstanceState(savedInstanceState)
+        if (this::apiKey.isInitialized) {
+            apiKey?.let {
+                // Save UI state changes to the savedInstanceState.
+                // This bundle will be passed to onCreate if the process is
+                // killed and restarted.
+                savedInstanceState.putString("apiKey", it.apiId)
+                savedInstanceState.putString("apiName", it.apiName)
+                savedInstanceState.putString("apiSecrete", it.apiSecret)
+            }
+        }
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        mState = savedInstanceState
+        // Restore UI state from the savedInstanceState.
+        // This bundle has also been passed to onCreate.
+        val apiId = savedInstanceState.getString("apiId")
+        Log.d(this.klass, "stored apiId: $apiId")
+    }
+
     /**
      * Does not override anything
      */
@@ -95,7 +122,13 @@ class MainActivity : AppCompatActivity() {
     fun onActivityCreated() {
         this.initUI()
         this.initFAB()
-        this.testBus();
+//        this.testBus()
+        restoreApiKey();
+
+        if (this::apiKey.isInitialized) {
+            Log.d(this.klass, "APIKEY Initialized. Message GONE")
+            binding.step1Fragment.visibility = GONE
+        }
     }
 
     private fun initUI() {
@@ -107,8 +140,8 @@ class MainActivity : AppCompatActivity() {
         deviceID?.let {
             Log.d(this.klass, "getDeviceID=$it")
             binding.deviceID.text = deviceID
-            binding.deviceID.invalidate();
-            binding.deviceID.requestLayout();
+            binding.deviceID.invalidate()
+            binding.deviceID.requestLayout()
         }
 
         this.fab = bindingMain.fab
@@ -119,17 +152,16 @@ class MainActivity : AppCompatActivity() {
 //		city.text = BuildConfig.IS_DEBUG_MODE.toString()
         binding.debugEnabled.text = isDebuggerConnected().toString()
 
-        binding.root.invalidate()
+//        binding.root.invalidate()
     }
 
     private fun testBus() {
-        this.bus!!.register(this);
         Log.d(this.klass, "emit 42");
 
         val testLocation = Location("");
         testLocation.latitude = 42.0
         testLocation.longitude = 42.0
-        this.bus!!.post(testLocation)
+        this.bus.post(testLocation)
     }
 
     @Subscribe
@@ -148,8 +180,30 @@ class MainActivity : AppCompatActivity() {
     @Subscribe
     fun apiKeyScanned(event: ApiKeyEvent) {
         Log.d(this.klass, "apiKeyScanned: $event");
-        this.apiKey = event;
+        this.apiKey = event
+        runOnUiThread {
+            binding.deviceID.text = this.apiKey.apiId
+        }
+
+        val sharedPreferences = getPreferences(MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("apiKey", this.apiKey.toJson())
+        editor.apply()
+        Log.d(this.klass, this.apiKey.toJson())
+        binding.step1Fragment.visibility = GONE
     }
+
+    private fun restoreApiKey() {
+        val sharedPreferences = getPreferences(MODE_PRIVATE)
+        val apiKeyJson = sharedPreferences.getString("apiKey", "");
+        Log.d(this.klass, "stored apiKeyJson ${apiKeyJson}")
+        apiKeyJson?.let {
+            if (apiKeyJson.isNotEmpty()) {
+                this.apiKey = ApiKeyEvent.fromJson(apiKeyJson)
+            }
+        }
+    }
+
 
     private fun checkPermissions(): Boolean {
         if (ContextCompat.checkSelfPermission(
@@ -309,6 +363,8 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_settings -> {
+                bus.post(ApiKeyEvent("123", "test", "0000"))
+                testBus();
                 return true
             }
             R.id.action_crash -> {
@@ -359,17 +415,4 @@ class MainActivity : AppCompatActivity() {
             .setAction("Action", null).show()
     }
 
-    override fun onSaveInstanceState(savedInstanceState: Bundle) {
-        super.onSaveInstanceState(savedInstanceState)
-        if (this::apiKey.isInitialized) {
-            apiKey?.let {
-                // Save UI state changes to the savedInstanceState.
-                // This bundle will be passed to onCreate if the process is
-                // killed and restarted.
-                savedInstanceState.putString("apiKey", apiKey!!.apiId)
-                savedInstanceState.putString("apiName", apiKey!!.apiName)
-                savedInstanceState.putString("apiSecrete", apiKey!!.apiSecret)
-            }
-        }
-    }
 }
