@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
     private val MY_PERMISSIONS_REQUEST_LOCATION = 1
 
-    private var enabled = false
+    private var sendingLocationActive = false
 
 //    private var locationPushService: LocationPushService? = null
 
@@ -145,7 +145,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         this.fab = bindingMain.fab
-        Log.d(this.klass, this.fab.toString())
+//        Log.d(this.klass, this.fab.toString())
+        this.fab.isEnabled = false
 
 //		city.text = if (BuildConfig.DEBUG) "Debug" else "Release"
 //		city.text = BuildConfig.BUILD_TYPE
@@ -191,6 +192,8 @@ class MainActivity : AppCompatActivity() {
         editor.apply()
         Log.d(this.klass, this.apiKey.toJson())
         binding.step1Fragment.visibility = GONE
+
+        this.fab.isEnabled = true
     }
 
     private fun restoreApiKey() {
@@ -200,6 +203,7 @@ class MainActivity : AppCompatActivity() {
         apiKeyJson?.let {
             if (apiKeyJson.isNotEmpty()) {
                 this.apiKey = ApiKeyEvent.fromJson(apiKeyJson)
+                this.fab.isEnabled = true
             }
         }
     }
@@ -280,7 +284,7 @@ class MainActivity : AppCompatActivity() {
 //            val latitude = location!!.latitude
 //            val longitude = location!!.longitude
 //            val speed = location!!.speed
-            if (this.enabled) {
+            if (this.sendingLocationActive) {
                 this.disableSendingData()
             } else {
                 if (!this.checkPermissions()) {
@@ -296,11 +300,12 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun enableSendingData() {
         if (this.initLocation()) {
-            this.enabled = true
+            this.sendingLocationActive = true
             this.fab.backgroundTintList = ColorStateList.valueOf(Color.GREEN)
 
             val startIntent = Intent(this@MainActivity, BusLocationService::class.java)
             startIntent.action = Constants.ACTION.STARTFOREGROUND_ACTION
+            startIntent.putExtra("apiSecret", this.apiKey.apiSecret);
             startForegroundService(startIntent)
 //			Logger.i("startService", startIntent)
         } else {
@@ -309,7 +314,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun disableSendingData() {
-        this.enabled = false
+        this.sendingLocationActive = false
         this.jobID?.let {
             //	JobManager.instance().cancel(it)
         }
