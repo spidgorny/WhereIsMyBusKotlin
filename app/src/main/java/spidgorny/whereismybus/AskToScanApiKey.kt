@@ -29,8 +29,6 @@ class AskToScanApiKey : Fragment() {
 
     private lateinit var viewModel: AskToScanApiKeyViewModel
 
-    private val REQUEST_QR_CODE = 123
-
     private val intentLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             val qrCodeJson = result.data?.getStringExtra("text")
@@ -62,13 +60,14 @@ class AskToScanApiKey : Fragment() {
         // TODO: Use the ViewModel
     }
 
-    fun onClickScanQr(context: Context) {
+    private fun onClickScanQr(context: Context) {
         Log.d(this.klass, "onClickScanQr")
 //        val myIntent = Intent(context, ScannerActivity::class.java)
 //        myIntent.putExtra("key", 12) //Optional parameters
 //        this@AskToScanApiKey.startActivityForResult(myIntent, REQUEST_QR_CODE)
 
         intentLauncher.launch(Intent(requireContext(), ScannerActivity::class.java))
+//        intentLauncher.launch(Intent(requireContext(), QRCodeScannerActivity::class.java))
     }
 
     val getContent = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->

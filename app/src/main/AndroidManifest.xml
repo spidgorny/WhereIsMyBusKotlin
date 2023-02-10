@@ -36,6 +36,10 @@
             android:name=".ScannerActivity"
             android:exported="true"
             android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".QRCodeScannerActivity"
+            android:exported="true"
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <service android:name=".BusLocationService" />
         <meta-data

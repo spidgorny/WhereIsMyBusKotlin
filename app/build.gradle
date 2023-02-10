@@ -16,7 +16,7 @@ android {
     compileSdkVersion 33
     defaultConfig {
         applicationId "spidgorny.whereismybus"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 33
         versionCode 1
         versionName "1.0"
@@ -83,5 +83,5 @@ dependencies {
     implementation 'com.orhanobut:logger:2.2.0'
 
     implementation 'com.github.yuriy-budiyev:code-scanner:2.3.2'
-
+    implementation("io.github.g00fy2.quickie:quickie-bundled:1.6.0")
 }
