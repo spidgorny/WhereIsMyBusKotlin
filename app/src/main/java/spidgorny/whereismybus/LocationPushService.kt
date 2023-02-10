@@ -14,6 +14,7 @@ import com.orhanobut.logger.Logger
 import com.squareup.otto.Bus
 import io.nlopez.smartlocation.OnLocationUpdatedListener
 import io.nlopez.smartlocation.SmartLocation
+import io.nlopez.smartlocation.location.providers.LocationGooglePlayServicesProvider
 import okhttp3.*
 import java.io.IOException
 
@@ -35,7 +36,7 @@ class LocationPushService(base: Context) : ContextWrapper(base) {
     protected fun updateLocation() {
 //		Snackbar.make(this, "Checking GPS...", Snackbar.LENGTH_LONG)
 //				.setAction("Action", null).show()
-        SmartLocation.with(this).location()
+        SmartLocation.with(this).location(LocationGooglePlayServicesProvider())
 //            .oneFix()
             .start(OnLocationUpdatedListener() {
                 val latitude = it.latitude
@@ -110,7 +111,7 @@ class LocationPushService(base: Context) : ContextWrapper(base) {
         return Settings.Secure.getString(this.contentResolver, Settings.Secure.ANDROID_ID);
     }
 
-    fun updateUIlocation(loc: Location) {
+    private fun updateUIlocation(loc: Location) {
 //		this.activity.tvLocation.text = sLocation
         this.bus?.post(loc)
 
