@@ -51,6 +51,7 @@ class BusLocationService : Service() {
             startPermissionActivity()
         } else if (intent.action == Constants.ACTION.STOPFOREGROUND_ACTION) {
             Logger.i("Received Stop Foreground Intent ")
+            locationPushService.stop();
             stopForeground(true)
             stopSelf()
         }
@@ -122,13 +123,15 @@ class BusLocationService : Service() {
     private fun startPermissionActivity() {
         this.apiSecret?.let {
             this.locationPushService.run(it)
-            android.os.Handler().postDelayed(
-                {
-                    //	Log.i(this.klass, "This'll run 3000 milliseconds later")
-                    this@BusLocationService.startPermissionActivity()
-                },
-                60000
-            )
+            if (false) {
+                android.os.Handler().postDelayed(
+                    {
+                        //	Log.i(this.klass, "This'll run 3000 milliseconds later")
+                        this@BusLocationService.startPermissionActivity()
+                    },
+                    10000
+                )
+            }
         }
 
 //		val intent = Intent(this, MainActivity::class.java)
