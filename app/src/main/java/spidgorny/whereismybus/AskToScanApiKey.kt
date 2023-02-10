@@ -33,8 +33,12 @@ class AskToScanApiKey : Fragment() {
 
     private val intentLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            onQrCodeScanned(result.data?.getStringExtra("text")!!)
+            val qrCodeJson = result.data?.getStringExtra("text")
+            qrCodeJson?.let {
+                onQrCodeScanned(it)
+            }
         }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -86,8 +90,10 @@ class AskToScanApiKey : Fragment() {
             bus!!.post(ApiKeyEvent(apiId, apiName, apiSecret))
         } catch (e: JSONException) {
             requireActivity().runOnUiThread {
-                Toast.makeText(requireContext(), "Invalid QR Code, must be scanned from Where-is-my.bus site",
-                    Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    requireContext(), "Invalid QR Code, must be scanned from Where-is-my.bus site",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }

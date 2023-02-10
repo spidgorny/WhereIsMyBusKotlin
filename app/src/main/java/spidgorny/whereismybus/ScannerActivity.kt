@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.budiyev.android.codescanner.*
+import com.google.zxing.BarcodeFormat
 
 class ScannerActivity : AppCompatActivity() {
     private var codeScanner: CodeScanner? = null
@@ -70,8 +71,7 @@ class ScannerActivity : AppCompatActivity() {
 
             // Parameters (default values)
             it.camera = CodeScanner.CAMERA_BACK // or CAMERA_FRONT or specific camera id
-            it.formats = CodeScanner.ALL_FORMATS // list of type BarcodeFormat,
-            // ex. listOf(BarcodeFormat.QR_CODE)
+            it.formats = listOf(BarcodeFormat.QR_CODE) // list of type BarcodeFormat,
             it.autoFocusMode = AutoFocusMode.SAFE // or CONTINUOUS
             it.scanMode = ScanMode.SINGLE // or CONTINUOUS or PREVIEW
             it.isAutoFocusEnabled = true // Whether to enable auto focus or not

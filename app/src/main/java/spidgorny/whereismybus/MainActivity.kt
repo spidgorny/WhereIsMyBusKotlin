@@ -29,6 +29,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.View.GONE
+import android.view.View.VISIBLE
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -68,7 +69,7 @@ class MainActivity : AppCompatActivity() {
 
     private var jobID: Int? = null
 
-    private lateinit var apiKey: ApiKeyEvent
+    private var apiKey: ApiKeyEvent? = null
 
     lateinit var mState: Bundle;
 
@@ -94,7 +95,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(savedInstanceState: Bundle) {
         super.onSaveInstanceState(savedInstanceState)
-        if (this::apiKey.isInitialized) {
+        if (this.apiKey != null) {
             apiKey?.let {
                 // Save UI state changes to the savedInstanceState.
                 // This bundle will be passed to onCreate if the process is
@@ -123,12 +124,8 @@ class MainActivity : AppCompatActivity() {
         this.initUI()
         this.initFAB()
 //        this.testBus()
-        restoreApiKey();
-
-        if (this::apiKey.isInitialized) {
-            Log.d(this.klass, "APIKEY Initialized. Message GONE")
-            binding.step1Fragment.visibility = GONE
-        }
+        restoreApiKey()
+        this.updateUI()
     }
 
     private fun initUI() {
@@ -182,30 +179,35 @@ class MainActivity : AppCompatActivity() {
     fun apiKeyScanned(event: ApiKeyEvent) {
         Log.d(this.klass, "apiKeyScanned: $event");
         this.apiKey = event
-        runOnUiThread {
-            binding.deviceID.text = this.apiKey.apiId
+
+        this.apiKey?.let {
+            Log.d(this.klass, it.toJson())
+            val sharedPreferences = getPreferences(AppCompatActivity.MODE_PRIVATE)
+            it.save(sharedPreferences)
         }
+        updateUI();
+    }
 
-        val sharedPreferences = getPreferences(MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putString("apiKey", this.apiKey.toJson())
-        editor.apply()
-        Log.d(this.klass, this.apiKey.toJson())
-        binding.step1Fragment.visibility = GONE
-
-        this.fab.isEnabled = true
+    fun updateUI() {
+        runOnUiThread {
+            if (this.apiKey !== null) {
+                this.apiKey?.let {
+                    binding.deviceID.text = it.apiId
+                    binding.step1Fragment.visibility = GONE
+                    this.fab.isEnabled = true
+                }
+            } else {
+                binding.deviceID.text = ""
+                binding.step1Fragment.visibility = VISIBLE
+                this.fab.isEnabled = false
+            }
+        }
     }
 
     private fun restoreApiKey() {
         val sharedPreferences = getPreferences(MODE_PRIVATE)
-        val apiKeyJson = sharedPreferences.getString("apiKey", "");
-        Log.d(this.klass, "stored apiKeyJson ${apiKeyJson}")
-        apiKeyJson?.let {
-            if (apiKeyJson.isNotEmpty()) {
-                this.apiKey = ApiKeyEvent.fromJson(apiKeyJson)
-                this.fab.isEnabled = true
-            }
-        }
+        this.apiKey = ApiKeyEvent.fromSharedPreferences(sharedPreferences)
+        this.updateUI();
     }
 
 
@@ -305,7 +307,9 @@ class MainActivity : AppCompatActivity() {
 
             val startIntent = Intent(this@MainActivity, BusLocationService::class.java)
             startIntent.action = Constants.ACTION.STARTFOREGROUND_ACTION
-            startIntent.putExtra("apiSecret", this.apiKey.apiSecret);
+            this.apiKey?.let {
+                startIntent.putExtra("apiSecret", it.apiSecret);
+            }
             startForegroundService(startIntent)
 //			Logger.i("startService", startIntent)
         } else {
@@ -368,8 +372,14 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_settings -> {
-                bus.post(ApiKeyEvent("123", "test", "0000"))
-                testBus();
+//                bus.post(ApiKeyEvent("123", "test", "0000"))
+//                testBus();
+                this.apiKey?.let {
+                    val sharedPreferences = getPreferences(MODE_PRIVATE)
+                    it.reset(sharedPreferences)
+                    this.apiKey = null;
+                    this.updateUI();
+                }
                 return true
             }
             R.id.action_crash -> {
