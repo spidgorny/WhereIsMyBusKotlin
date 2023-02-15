@@ -30,7 +30,8 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import androidx.core.content.ContextCompat
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
@@ -57,7 +58,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bindingMain: ActivityMainBinding
     private lateinit var binding: ContentMainBinding
 
-    private lateinit var fab: FloatingActionButton
+    private lateinit var fab: ExtendedFloatingActionButton
 
     private var defaultFABColor: ColorStateList? = ColorStateList.valueOf(0)
 
@@ -243,6 +244,8 @@ class MainActivity : AppCompatActivity() {
         if (this.initLocation()) {
             this.sendingLocationActive = true
             this.fab.backgroundTintList = ColorStateList.valueOf(Color.GREEN)
+            this.fab.icon =
+                (ContextCompat.getDrawable(this, R.drawable.baseline_block_24))
 
             val startIntent = Intent(this@MainActivity, BusLocationService::class.java)
             startIntent.action = Constants.ACTION.STARTFOREGROUND_ACTION
