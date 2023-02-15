@@ -246,6 +246,7 @@ class MainActivity : AppCompatActivity() {
             this.fab.backgroundTintList = ColorStateList.valueOf(Color.GREEN)
             this.fab.icon =
                 (ContextCompat.getDrawable(this, R.drawable.baseline_block_24))
+            this.fab.text = "Disable GPS"
 
             val startIntent = Intent(this@MainActivity, BusLocationService::class.java)
             startIntent.action = Constants.ACTION.STARTFOREGROUND_ACTION
@@ -272,6 +273,10 @@ class MainActivity : AppCompatActivity() {
         startIntent.action = Constants.ACTION.STOPFOREGROUND_ACTION
         startService(startIntent)
 //		Logger.i("startService", startIntent)
+
+        this.fab.icon =
+            (ContextCompat.getDrawable(this, R.drawable.start_gps))
+        this.fab.text = "Enable GPS"
     }
 
     private fun initLocation(): Boolean {
