@@ -28,6 +28,10 @@ import com.squareup.otto.Subscribe
 import io.nlopez.smartlocation.SmartLocation
 import spidgorny.whereismybus.databinding.ActivityMainBinding
 import spidgorny.whereismybus.databinding.ContentMainBinding
+import spidgorny.whereismybus.event.ApiKeyEvent
+import spidgorny.whereismybus.event.LocationSharingDisabled
+import spidgorny.whereismybus.location.BusLocationService
+import spidgorny.whereismybus.location.PermissionsLocation
 import java.util.*
 
 
@@ -172,7 +176,13 @@ class MainActivity : AppCompatActivity() {
         updateUI();
     }
 
-    fun updateUI() {
+    @Subscribe
+    fun onLocationSharingDisabled(event: LocationSharingDisabled) {
+        Log.d(this.klass, "onLocationSharingDisabled")
+        this.disableSendingData();
+    }
+
+    private fun updateUI() {
         runOnUiThread {
             if (this.apiKey !== null) {
                 this.apiKey?.let {

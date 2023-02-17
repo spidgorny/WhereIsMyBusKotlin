@@ -1,4 +1,4 @@
-package spidgorny.whereismybus
+package spidgorny.whereismybus.location
 
 //import android.support.design.widget.Snackbar
 //import kotlinx.android.synthetic.main.activity_main.*
@@ -17,6 +17,7 @@ import io.nlopez.smartlocation.SmartLocation.LocationControl
 import io.nlopez.smartlocation.location.config.LocationParams
 import io.nlopez.smartlocation.location.providers.LocationGooglePlayServicesProvider
 import okhttp3.*
+import spidgorny.whereismybus.Globals
 import java.io.IOException
 
 
@@ -35,7 +36,7 @@ class LocationPushService(base: Context) : ContextWrapper(base) {
         this.smartLocation = SmartLocation.with(this)
             .location(LocationGooglePlayServicesProvider())
             .config(LocationParams.NAVIGATION)
-//            .oneFix()
+            .oneFix()
 
         this.updateLocation()
     }

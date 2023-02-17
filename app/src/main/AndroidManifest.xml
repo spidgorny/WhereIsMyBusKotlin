@@ -33,15 +33,15 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ScannerActivity"
+            android:name=".qrcode.ScannerActivity"
             android:exported="true"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".QRCodeScannerActivity"
+            android:name=".qrcode.QRCodeScannerActivity"
             android:exported="true"
             android:theme="@style/AppTheme.NoActionBar" />
 
-        <service android:name=".BusLocationService" />
+        <service android:name=".location.BusLocationService" />
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="e14c9e433ccc650ff7983d7aae83eaf318606e10" />

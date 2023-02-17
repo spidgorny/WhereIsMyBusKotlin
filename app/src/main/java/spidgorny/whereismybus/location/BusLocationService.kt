@@ -1,4 +1,4 @@
-package spidgorny.whereismybus
+package spidgorny.whereismybus.location
 
 //import android.support.v4.content.ContextCompat.startActivity
 //import io.fabric.sdk.android.services.settings.IconRequest.build
@@ -14,13 +14,19 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.os.ResultReceiver
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.orhanobut.logger.Logger
 import com.squareup.otto.Bus
+import spidgorny.whereismybus.Constants
+import spidgorny.whereismybus.MainActivity
+import spidgorny.whereismybus.R
+import spidgorny.whereismybus.event.LocationSharingDisabled
 
 class BusLocationService : Service() {
 
+    private val klass: String = "BusLocationService"
     private lateinit var locationPushService: LocationPushService
 
     private val NOTIFICATION_CHANNEL_ID = "my_channel_id_01"
@@ -115,18 +121,20 @@ class BusLocationService : Service() {
     }
 
     override fun onDestroy() {
+        this.bus?.post(LocationSharingDisabled())
         super.onDestroy()
-        Logger.i("inDestroy")
+        Logger.i("onDestroy")
         Toast.makeText(this, "Location will not be sent", Toast.LENGTH_SHORT).show()
     }
 
     private fun startPermissionActivity() {
         this.apiSecret?.let {
             this.locationPushService.run(it)
-            if (false) {
+            val delayMillis = 10000
+            if (delayMillis > 0) {
                 android.os.Handler().postDelayed(
                     {
-                        //	Log.i(this.klass, "This'll run 3000 milliseconds later")
+                        Log.i(this.klass, "This is run $delayMillis milliseconds later")
                         this@BusLocationService.startPermissionActivity()
                     },
                     10000

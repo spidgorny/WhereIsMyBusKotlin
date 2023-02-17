@@ -1,4 +1,4 @@
-package spidgorny.whereismybus
+package spidgorny.whereismybus.qrcode
 
 import android.Manifest
 import android.app.Activity

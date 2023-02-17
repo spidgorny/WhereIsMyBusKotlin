@@ -1,4 +1,4 @@
-package spidgorny.whereismybus
+package spidgorny.whereismybus.location
 
 import android.Manifest
 import android.app.Activity

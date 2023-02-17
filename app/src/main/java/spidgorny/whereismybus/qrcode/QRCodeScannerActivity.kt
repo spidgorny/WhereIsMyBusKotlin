@@ -1,4 +1,4 @@
-package spidgorny.whereismybus
+package spidgorny.whereismybus.qrcode
 
 
 import android.content.Intent
@@ -10,6 +10,8 @@ import io.github.g00fy2.quickie.QRResult
 import io.github.g00fy2.quickie.ScanQRCode
 
 class QRCodeScannerActivity : AppCompatActivity() {
+
+    val klass = "QRCodeScannerActivity"
 
     private val scanQrCodeLauncher = registerForActivityResult(ScanQRCode()) { result: QRResult ->
         // handle QRResult
@@ -25,8 +27,6 @@ class QRCodeScannerActivity : AppCompatActivity() {
             }
         }
     }
-
-    val klass = "QRCodeScannerActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

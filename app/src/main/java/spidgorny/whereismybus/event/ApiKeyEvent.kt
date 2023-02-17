@@ -1,4 +1,4 @@
-package spidgorny.whereismybus
+package spidgorny.whereismybus.event
 
 import android.content.SharedPreferences
 import android.util.Log

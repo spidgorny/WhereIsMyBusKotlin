@@ -14,7 +14,7 @@
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/step1Fragment"
-            android:name="spidgorny.whereismybus.AskToScanApiKey"
+            android:name="spidgorny.whereismybus.qrcode.AskToScanApiKey"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="visible"

@@ -1,4 +1,4 @@
-package spidgorny.whereismybus
+package spidgorny.whereismybus.qrcode
 
 import android.content.Context
 import android.content.Intent
@@ -16,6 +16,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.squareup.otto.Bus
 import org.json.JSONException
 import org.json.JSONObject
+import spidgorny.whereismybus.Globals
+import spidgorny.whereismybus.R
+import spidgorny.whereismybus.event.ApiKeyEvent
 
 
 class AskToScanApiKey : Fragment() {

@@ -1,4 +1,4 @@
-package spidgorny.whereismybus
+package spidgorny.whereismybus.qrcode
 
 import android.content.Intent
 import android.os.Bundle
@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.budiyev.android.codescanner.*
 import com.google.zxing.BarcodeFormat
+import spidgorny.whereismybus.R
 
 class ScannerActivity : AppCompatActivity() {
     private var codeScanner: CodeScanner? = null
