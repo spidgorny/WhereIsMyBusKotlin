@@ -1,19 +1,28 @@
 package spidgorny.whereismybus
 
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import io.github.g00fy2.quickie.QRResult
 import io.github.g00fy2.quickie.ScanQRCode
 
 class QRCodeScannerActivity : AppCompatActivity() {
 
-    private val scanQrCodeLauncher = registerForActivityResult(ScanQRCode()) { result ->
+    private val scanQrCodeLauncher = registerForActivityResult(ScanQRCode()) { result: QRResult ->
         // handle QRResult
         Log.d("QRCodeScannerActivity", result.toString())
         runOnUiThread {
-            Toast.makeText(this, "Scan result: $result", Toast.LENGTH_LONG).show()
+            if (result is QRResult.QRSuccess) {
+                val success: QRResult.QRSuccess = result;
+                Toast.makeText(this, "Scan result: $result", Toast.LENGTH_LONG).show()
+                val data = Intent()
+                data.putExtra("text", success.content.rawValue)
+                setResult(RESULT_OK, data)
+                finish()
+            }
         }
     }
 

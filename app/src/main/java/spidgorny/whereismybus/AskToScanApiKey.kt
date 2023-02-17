@@ -66,8 +66,9 @@ class AskToScanApiKey : Fragment() {
 //        myIntent.putExtra("key", 12) //Optional parameters
 //        this@AskToScanApiKey.startActivityForResult(myIntent, REQUEST_QR_CODE)
 
-        intentLauncher.launch(Intent(requireContext(), ScannerActivity::class.java))
-//        intentLauncher.launch(Intent(requireContext(), QRCodeScannerActivity::class.java))
+        // black screen on real device
+//        intentLauncher.launch(Intent(requireContext(), ScannerActivity::class.java))
+        intentLauncher.launch(Intent(requireContext(), QRCodeScannerActivity::class.java))
     }
 
     val getContent = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -88,6 +89,7 @@ class AskToScanApiKey : Fragment() {
 
             bus!!.post(ApiKeyEvent(apiId, apiName, apiSecret))
         } catch (e: JSONException) {
+            Log.d(this.klass, "JSONException=$e")
             requireActivity().runOnUiThread {
                 Toast.makeText(
                     requireContext(), "Invalid QR Code, must be scanned from Where-is-my.bus site",

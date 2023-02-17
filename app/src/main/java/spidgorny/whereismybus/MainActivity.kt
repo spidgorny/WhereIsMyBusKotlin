@@ -1,18 +1,6 @@
 package spidgorny.whereismybus
 
-//import im.delight.android.location.SimpleLocation
-//import io.nlopez.smartlocation.OnLocationUpdatedListener
-//import com.evernote.android.job.JobManager
-//import okhttp3.*
-//import android.support.design.widget.Snackbar
-//import android.support.v4.app.ActivityCompat
-//import android.support.v4.content.ContextCompat
-//import android.support.v7.app.AppCompatActivity
-//import com.crashlytics.android.Crashlytics
-//import io.fabric.sdk.android.Fabric
-//import kotlinx.android.synthetic.main.activity_main.*
-//import kotlinx.android.synthetic.main.content_main.*
-
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -43,6 +31,7 @@ import spidgorny.whereismybus.databinding.ContentMainBinding
 import java.util.*
 
 
+@SuppressLint("SetTextI18n")
 class MainActivity : AppCompatActivity() {
 
     private val klass = "MainActivity"
@@ -159,7 +148,7 @@ class MainActivity : AppCompatActivity() {
 
     @Subscribe
     fun locationUpdateFromService(event: Location) {
-        Log.d(this.klass, "received " + event.toString())
+        Log.d(this.klass, "received $event")
         Logger.i("received", event)
         runOnUiThread {
             binding.updated.text = Calendar.getInstance().getTime().toString();
